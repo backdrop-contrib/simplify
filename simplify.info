@@ -1,0 +1,7 @@
+; $Id$
+name = Simplify
+description = Simplifies the admin interface.
+core = 7.x
+files[] = simplify.module
+files[] = simplify.install
+configure = admin/config/user-interface/simplify

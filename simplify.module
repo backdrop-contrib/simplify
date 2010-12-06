@@ -1,0 +1,195 @@
+<?php
+// $Id$
+
+/**
+ * @file
+ * Simplifies the admin interface.
+ */
+
+/**
+ * Implements hook_help().
+ */
+function simplify_help($path, $arg) {
+  switch ($path) {
+    case 'admin/config/user-interface/simplify':
+      $output = '<p>' . t('Check boxes to hide those items from the admin interface.') . '</p>';
+      return $output;
+    case 'admin/help#simplify':
+      $output = '<h3>' . t('About') . '</h3>';
+      $output .= '<p>' . t('The Simplify module offers the ability to simplify the admin interface through simple on/off checkboxes. If desired, you may disable the Simplify module from the <a href="@modules">Module administration page</a>. See the <a href="@project">Simplify project page</a> page for more information.', array('@modules' => url('admin/modules'), '@project' => 'http://drupal.org/project/simplify')) . '</p>';
+      return $output;
+  }
+}
+
+/**
+ * Implements hook_permission().
+ */
+function simplify_permission() {
+  return array(
+    'administer simplify' => array(
+      'title' => t('Administer simplify'),
+    ),
+    'simplify node hide settings' => array(
+      'title' => t('Simplify node hide settings'),
+    ),
+  );
+}
+
+/**
+ * Implements hook_menu().
+ */
+function simplify_menu() {
+  $items = array();
+  $items['admin/config/user-interface/simplify'] = array(
+    'title' => 'Simplify',
+    'description' => 'Adjust Simplify configuration options.',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('simplify_admin_settings'),
+    'access arguments' => array('administer simplify'),
+    'type' => MENU_NORMAL_ITEM,
+  );
+  return $items;
+}
+
+/**
+ * Implements hook_form_alter().
+ */
+function simplify_form_alter(&$form, &$form_state, $form_id) {
+  switch ($form_id) {
+    case "page_node_form":
+      global $user;
+      // Check role to hide items, but never show for administrator.
+      if (1 != $user->uid && user_access('simplify node hide settings')) {
+        // Hide specified form items if they are checked.
+        if (variable_get('simplify_page_node_hide_menu')) {
+          unset($form['menu']);
+        }
+        if (variable_get('simplify_page_node_hide_revision_information')) {
+          unset($form['revision_information']);
+        }
+        if (variable_get('simplify_page_node_hide_path')) {
+          unset($form['path']);
+        }
+        if (variable_get('simplify_page_node_hide_comment_settings')) {
+          unset($form['comment_settings']);
+        }
+        if (variable_get('simplify_page_node_hide_author')) {
+          unset($form['author']);
+        }
+        if (variable_get('simplify_page_node_hide_options')) {
+          unset($form['options']);
+        }
+      }
+    case ("_node_form" == drupal_substr($form_id, -10)):
+      // All nodes.
+      global $user;
+      // Check role to hide items, but never show for administrator.
+      if (1 != $user->uid && user_access('simplify node hide settings')) {
+        // Hide specified form items if they are checked.
+        if (variable_get('simplify_node_hide_menu')) {
+          unset($form['menu']);
+        }
+        if (variable_get('simplify_node_hide_revision_information')) {
+          unset($form['revision_information']);
+        }
+        if (variable_get('simplify_node_hide_path')) {
+          unset($form['path']);
+        }
+        if (variable_get('simplify_node_hide_comment_settings')) {
+          unset($form['comment_settings']);
+        }
+        if (variable_get('simplify_node_hide_author')) {
+          unset($form['author']);
+        }
+        if (variable_get('simplify_node_hide_options')) {
+          unset($form['options']);
+        }
+      }
+  }
+}
+
+/**
+ * Form builder. Simplify admin settings.
+ */
+function simplify_admin_settings() {
+  $form = array();
+  $node_types = node_type_get_types();
+  // All node settings.
+  $form['simplify']['node'] = array(
+    '#type' => 'fieldset',
+    '#title' => t('All Nodes'),
+    '#description' => '<p>' . t('Checked settings override all other node settings (ex. Page Node, etc.).') . '</p>',
+  );
+  // Get variables if they exist. If not, default to 1 (true).
+  $form['simplify']['node']['simplify_node_hide_menu'] = array(
+    '#type' => 'checkbox',
+    '#title' => t('Hide menu settings'),
+    '#default_value' => variable_get('simplify_node_hide_menu'),
+  );
+  $form['simplify']['node']['simplify_node_hide_revision_information'] = array(
+    '#type' => 'checkbox',
+    '#title' => t('Hide revision information'),
+    '#default_value' => variable_get('simplify_node_hide_revision_information'),
+  );
+  $form['simplify']['node']['simplify_node_hide_path'] = array(
+    '#type' => 'checkbox',
+    '#title' => t('Hide path settings'),
+    '#default_value' => variable_get('simplify_node_hide_path'),
+  );
+  $form['simplify']['node']['simplify_node_hide_comment_settings'] = array(
+    '#type' => 'checkbox',
+    '#title' => t('Hide comment settings'),
+    '#default_value' => variable_get('simplify_node_hide_comment_settings'),
+  );
+  $form['simplify']['node']['simplify_node_hide_author'] = array(
+    '#type' => 'checkbox',
+    '#title' => t('Hide author information'),
+    '#default_value' => variable_get('simplify_node_hide_author'),
+  );
+  $form['simplify']['node']['simplify_node_hide_options'] = array(
+    '#type' => 'checkbox',
+    '#title' => t('Hide publishing options'),
+    '#default_value' => variable_get('simplify_node_hide_options'),
+  );
+  // Check if Page content type exists
+  if (isset($node_types['page'])) {
+    // Page node settings.
+    $form['simplify']['page_node'] = array(
+      '#type' => 'fieldset',
+      '#title' => t('Page Node'),
+      '#description' => '<p>' . t('Checked settings only apply to nodes of the Page content type.') . '</p>',
+    );
+    // Get variables if they exist. If not, default to 1 (true).
+    $form['simplify']['page_node']['simplify_page_node_hide_menu'] = array(
+      '#type' => 'checkbox',
+      '#title' => t('Hide menu settings'),
+      '#default_value' => variable_get('simplify_page_node_hide_menu'),
+    );
+    $form['simplify']['page_node']['simplify_page_node_hide_revision_information'] = array(
+      '#type' => 'checkbox',
+      '#title' => t('Hide revision information'),
+      '#default_value' => variable_get('simplify_page_node_hide_revision_information'),
+    );
+    $form['simplify']['page_node']['simplify_page_node_hide_path'] = array(
+      '#type' => 'checkbox',
+      '#title' => t('Hide path settings'),
+      '#default_value' => variable_get('simplify_page_node_hide_path'),
+    );
+    $form['simplify']['page_node']['simplify_page_node_hide_comment_settings'] = array(
+      '#type' => 'checkbox',
+      '#title' => t('Hide comment settings'),
+      '#default_value' => variable_get('simplify_page_node_hide_comment_settings'),
+    );
+    $form['simplify']['page_node']['simplify_page_node_hide_author'] = array(
+      '#type' => 'checkbox',
+      '#title' => t('Hide author information'),
+      '#default_value' => variable_get('simplify_page_node_hide_author'),
+    );
+    $form['simplify']['page_node']['simplify_page_node_hide_options'] = array(
+      '#type' => 'checkbox',
+      '#title' => t('Hide publishing options'),
+      '#default_value' => variable_get('simplify_page_node_hide_options'),
+    );
+  }
+  return system_settings_form($form);
+}

@@ -1,0 +1,25 @@
+<?php
+// $Id$
+
+/**
+ * @file
+ * Install, update and uninstall functions for the simplify module.
+ */
+
+/**
+ * Implement hook_uninstall().
+ */
+function simplify_uninstall() {
+  variable_del('simplify_node_hide_menu');
+  variable_del('simplify_node_hide_revision_information');
+  variable_del('simplify_node_hide_path');
+  variable_del('simplify_node_hide_comment_settings');
+  variable_del('simplify_node_hide_author');
+  variable_del('simplify_node_hide_options');
+  variable_del('simplify_page_node_hide_menu');
+  variable_del('simplify_page_node_hide_revision_information');
+  variable_del('simplify_page_node_hide_path');
+  variable_del('simplify_page_node_hide_comment_settings');
+  variable_del('simplify_page_node_hide_author');
+  variable_del('simplify_page_node_hide_options');
+}
