@@ -1,6 +1,7 @@
 name = Simplify
 description = Simplifies the admin interface.
 core = 7.x
+version = 7.x-1.2
 files[] = simplify.module
 files[] = simplify.install
 configure = admin/config/user-interface/simplify
