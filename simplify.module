@@ -56,59 +56,47 @@ function simplify_menu() {
 function simplify_form_alter(&$form, &$form_state, $form_id) {
   global $user;
   switch ($form_id) {
-    case "page_node_form":
+    case ('_node_form' == drupal_substr($form_id, -10)):
+      // All nodes forms.
       // Check role to hide items, but never show for administrator.
       if (1 != $user->uid && user_access('simplify node hide settings')) {
-        // Hide specified form items if they are checked.
-        if (variable_get('simplify_page_node_hide_filter')) {
-          drupal_add_js('jQuery().ready(function(){jQuery(".filter-wrapper").hide();});', 'inline');
-        }
-        if (variable_get('simplify_page_node_hide_menu')) {
-          unset($form['menu']);
-        }
-        if (variable_get('simplify_page_node_hide_revision_information')) {
-          unset($form['revision_information']);
-        }
-        if (variable_get('simplify_page_node_hide_path')) {
-          unset($form['path']);
-        }
-        if (variable_get('simplify_page_node_hide_comment_settings')) {
-          unset($form['comment_settings']);
-        }
-        if (variable_get('simplify_page_node_hide_author')) {
-          unset($form['author']);
-        }
-        if (variable_get('simplify_page_node_hide_options')) {
-          unset($form['options']);
+        $node_types = node_type_get_types();
+        // Add general node to list of node types (all nodes).
+        array_push($node_types, array('type' => 'node'));
+        foreach ($node_types AS $key => $value) {
+          $value = (array) $value;
+          if (str_replace('_node_form', '', $form_id) == $value['type'] || 'node' == $value['type']) {
+            simplify_form_alter_unset(&$form, (array) $value);
+          }
         }
       }
-    case ("_node_form" == drupal_substr($form_id, -10)):
-      // All nodes.
-      // Check role to hide items, but never show for administrator.
-      if (1 != $user->uid && user_access('simplify node hide settings')) {
-        // Hide specified form items if they are checked.
-        if (variable_get('simplify_node_hide_filter')) {
-          drupal_add_js('jQuery().ready(function(){jQuery(".filter-wrapper").hide();});', 'inline');
-        }
-        if (variable_get('simplify_node_hide_menu')) {
-          unset($form['menu']);
-        }
-        if (variable_get('simplify_node_hide_revision_information')) {
-          unset($form['revision_information']);
-        }
-        if (variable_get('simplify_node_hide_path')) {
-          unset($form['path']);
-        }
-        if (variable_get('simplify_node_hide_comment_settings')) {
-          unset($form['comment_settings']);
-        }
-        if (variable_get('simplify_node_hide_author')) {
-          unset($form['author']);
-        }
-        if (variable_get('simplify_node_hide_options')) {
-          unset($form['options']);
-        }
-      }
+  }
+}
+
+function simplify_form_alter_unset(&$form, $node_type) {
+  $node_type_type = $node_type['type'];
+  $simplify_node_type = ($node_type_type == 'node') ? '' : '_' . $node_type_type;
+  // Hide specified form items if they are checked.
+  if (variable_get('simplify' . $simplify_node_type . '_node_hide_filter')) {
+    drupal_add_js('jQuery().ready(function(){jQuery(".filter-wrapper").hide();});', 'inline');
+  }
+  if (variable_get('simplify' . $simplify_node_type . '_node_hide_menu')) {
+    unset($form['menu']);
+  }
+  if (variable_get('simplify' . $simplify_node_type . '_node_hide_revision_information')) {
+    unset($form['revision_information']);
+  }
+  if (variable_get('simplify' . $simplify_node_type . '_node_hide_path')) {
+    unset($form['path']);
+  }
+  if (variable_get('simplify' . $simplify_node_type . '_node_hide_comment_settings')) {
+    unset($form['comment_settings']);
+  }
+  if (variable_get('simplify' . $simplify_node_type . '_node_hide_author')) {
+    unset($form['author']);
+  }
+  if (variable_get('simplify' . $simplify_node_type . '_node_hide_options')) {
+    unset($form['options']);
   }
 }
 
@@ -118,92 +106,59 @@ function simplify_form_alter(&$form, &$form_state, $form_id) {
 function simplify_admin_settings() {
   $form = array();
   $node_types = node_type_get_types();
-  // All node settings.
-  $form['simplify']['node'] = array(
-    '#type' => 'fieldset',
-    '#title' => t('All Nodes'),
-    '#description' => '<p>' . t('Checked settings override all other node settings (ex. Page Node, etc.).') . '</p>',
-  );
-  // Get variables if they exist. If not, default to 1 (true).
-  $form['simplify']['node']['simplify_node_hide_filter'] = array(
-    '#type' => 'checkbox',
-    '#title' => t('Hide text format settings'),
-    '#default_value' => variable_get('simplify_node_hide_filter'),
-  );
-  $form['simplify']['node']['simplify_node_hide_menu'] = array(
-    '#type' => 'checkbox',
-    '#title' => t('Hide menu settings'),
-    '#default_value' => variable_get('simplify_node_hide_menu'),
-  );
-  $form['simplify']['node']['simplify_node_hide_revision_information'] = array(
-    '#type' => 'checkbox',
-    '#title' => t('Hide revision information'),
-    '#default_value' => variable_get('simplify_node_hide_revision_information'),
-  );
-  $form['simplify']['node']['simplify_node_hide_path'] = array(
-    '#type' => 'checkbox',
-    '#title' => t('Hide path settings'),
-    '#default_value' => variable_get('simplify_node_hide_path'),
-  );
-  $form['simplify']['node']['simplify_node_hide_comment_settings'] = array(
-    '#type' => 'checkbox',
-    '#title' => t('Hide comment settings'),
-    '#default_value' => variable_get('simplify_node_hide_comment_settings'),
-  );
-  $form['simplify']['node']['simplify_node_hide_author'] = array(
-    '#type' => 'checkbox',
-    '#title' => t('Hide author information'),
-    '#default_value' => variable_get('simplify_node_hide_author'),
-  );
-  $form['simplify']['node']['simplify_node_hide_options'] = array(
-    '#type' => 'checkbox',
-    '#title' => t('Hide publishing options'),
-    '#default_value' => variable_get('simplify_node_hide_options'),
-  );
-  // Check if Page content type exists
-  if (isset($node_types['page'])) {
-    // Page node settings.
-    $form['simplify']['page_node'] = array(
-      '#type' => 'fieldset',
-      '#title' => t('Page Node'),
-      '#description' => '<p>' . t('Checked settings only apply to nodes of the Page content type.') . '</p>',
-    );
-    // Get variables if they exist. If not, default to 1 (true).
-    $form['simplify']['page_node']['simplify_page_node_hide_filter'] = array(
-      '#type' => 'checkbox',
-      '#title' => t('Hide text format settings'),
-      '#default_value' => variable_get('simplify_page_node_hide_filter'),
-    );
-    $form['simplify']['page_node']['simplify_page_node_hide_menu'] = array(
-      '#type' => 'checkbox',
-      '#title' => t('Hide menu settings'),
-      '#default_value' => variable_get('simplify_page_node_hide_menu'),
-    );
-    $form['simplify']['page_node']['simplify_page_node_hide_revision_information'] = array(
-      '#type' => 'checkbox',
-      '#title' => t('Hide revision information'),
-      '#default_value' => variable_get('simplify_page_node_hide_revision_information'),
-    );
-    $form['simplify']['page_node']['simplify_page_node_hide_path'] = array(
-      '#type' => 'checkbox',
-      '#title' => t('Hide path settings'),
-      '#default_value' => variable_get('simplify_page_node_hide_path'),
-    );
-    $form['simplify']['page_node']['simplify_page_node_hide_comment_settings'] = array(
-      '#type' => 'checkbox',
-      '#title' => t('Hide comment settings'),
-      '#default_value' => variable_get('simplify_page_node_hide_comment_settings'),
-    );
-    $form['simplify']['page_node']['simplify_page_node_hide_author'] = array(
-      '#type' => 'checkbox',
-      '#title' => t('Hide author information'),
-      '#default_value' => variable_get('simplify_page_node_hide_author'),
-    );
-    $form['simplify']['page_node']['simplify_page_node_hide_options'] = array(
-      '#type' => 'checkbox',
-      '#title' => t('Hide publishing options'),
-      '#default_value' => variable_get('simplify_page_node_hide_options'),
-    );
+  // Add general node to list of node types (all nodes).
+  array_unshift($node_types, array('type' => 'node', 'name' => 'All'));
+  foreach ($node_types AS $key => $value) {
+    simplify_get_admin_settings_array(&$form, (array) $value);
   }
   return system_settings_form($form);
+}
+
+/**
+ * Array builder. Simplify admin settings.
+ */
+function simplify_get_admin_settings_array(&$form, $node_type) {
+  $node_type_type = $node_type['type'];
+  $node_type_name = $node_type['name'];
+  $form['simplify'][$node_type_type] = array(
+    '#type' => 'fieldset',
+    '#title' => t($node_type_name),
+    '#description' => '<p>' . t("Checked settings apply to $node_type_name nodes.") . '</p>',
+  );
+  $simplify_node_type = ($node_type_type == 'node') ? '' : '_' . $node_type_type;
+  $form['simplify'][$node_type_type]['simplify' . $simplify_node_type . '_node_hide_filter'] = array(
+    '#type' => 'checkbox',
+    '#title' => t('Hide text format settings'),
+    '#default_value' => variable_get('simplify' . $simplify_node_type . '_node_hide_filter'),
+  );
+  $form['simplify'][$node_type_type]['simplify' . $simplify_node_type . '_node_hide_menu'] = array(
+    '#type' => 'checkbox',
+    '#title' => t('Hide menu settings'),
+    '#default_value' => variable_get('simplify' . $simplify_node_type . '_node_hide_menu'),
+  );
+  $form['simplify'][$node_type_type]['simplify' . $simplify_node_type . '_node_hide_revision_information'] = array(
+    '#type' => 'checkbox',
+    '#title' => t('Hide revision information'),
+    '#default_value' => variable_get('simplify' . $simplify_node_type . '_node_hide_revision_information'),
+  );
+  $form['simplify'][$node_type_type]['simplify' . $simplify_node_type . '_node_hide_path'] = array(
+    '#type' => 'checkbox',
+    '#title' => t('Hide path settings'),
+    '#default_value' => variable_get('simplify' . $simplify_node_type . '_node_hide_path'),
+  );
+  $form['simplify'][$node_type_type]['simplify' . $simplify_node_type . '_node_hide_comment_settings'] = array(
+    '#type' => 'checkbox',
+    '#title' => t('Hide comment settings'),
+    '#default_value' => variable_get('simplify' . $simplify_node_type . '_node_hide_comment_settings'),
+  );
+  $form['simplify'][$node_type_type]['simplify' . $simplify_node_type . '_node_hide_author'] = array(
+    '#type' => 'checkbox',
+    '#title' => t('Hide author information'),
+    '#default_value' => variable_get('simplify' . $simplify_node_type . '_node_hide_author'),
+  );
+  $form['simplify'][$node_type_type]['simplify' . $simplify_node_type . '_node_hide_options'] = array(
+    '#type' => 'checkbox',
+    '#title' => t('Hide publishing options'),
+    '#default_value' => variable_get('simplify' . $simplify_node_type . '_node_hide_options'),
+  );
 }
