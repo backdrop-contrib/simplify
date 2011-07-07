@@ -66,7 +66,7 @@ function simplify_form_alter(&$form, &$form_state, $form_id) {
         foreach ($node_types AS $key => $value) {
           $value = (array) $value;
           if (str_replace('_node_form', '', $form_id) == $value['type'] || 'node' == $value['type']) {
-            simplify_form_alter_unset(&$form, (array) $value);
+            simplify_form_alter_unset($form, (array) $value);
           }
         }
       }
@@ -109,7 +109,7 @@ function simplify_admin_settings() {
   // Add general node to list of node types (all nodes).
   array_unshift($node_types, array('type' => 'node', 'name' => 'All'));
   foreach ($node_types AS $key => $value) {
-    simplify_get_admin_settings_array(&$form, (array) $value);
+    simplify_get_admin_settings_array($form, (array) $value);
   }
   return system_settings_form($form);
 }
