@@ -81,22 +81,22 @@ function simplify_form_alter_unset(&$form, $node_type) {
     drupal_add_js('jQuery().ready(function(){jQuery(".filter-wrapper").hide();});', 'inline');
   }
   if (variable_get('simplify' . $simplify_node_type . '_node_hide_menu')) {
-    unset($form['menu']);
+    $form['menu']['#access'] = FALSE;
   }
   if (variable_get('simplify' . $simplify_node_type . '_node_hide_revision_information')) {
-    unset($form['revision_information']);
+    $form['revision_information']['#access'] = FALSE;
   }
   if (variable_get('simplify' . $simplify_node_type . '_node_hide_path')) {
-    unset($form['path']);
+    $form['path']['#access'] = FALSE;
   }
   if (variable_get('simplify' . $simplify_node_type . '_node_hide_comment_settings')) {
-    unset($form['comment_settings']);
+    $form['comment_settings']['#access'] = FALSE;
   }
   if (variable_get('simplify' . $simplify_node_type . '_node_hide_author')) {
-    unset($form['author']);
+    $form['author']['#access'] = FALSE;
   }
   if (variable_get('simplify' . $simplify_node_type . '_node_hide_options')) {
-    unset($form['options']);
+    $form['options']['#access'] = FALSE;
   }
 }
 
