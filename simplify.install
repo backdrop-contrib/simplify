@@ -1,8 +1,7 @@
 <?php
-
 /**
  * @file
- * Install, update and uninstall functions for the simplify module.
+ * Install, update and uninstall functions for the Simplify module.
  */
 
 /**
@@ -10,16 +9,22 @@
  */
 function simplify_uninstall() {
   $node_types = node_type_get_types();
-  // Add general node to list of node types (all nodes).
+
+  // Add general node to list of node types (all nodes)
   array_unshift($node_types, array('type' => 'node'));
-  foreach ($node_types AS $key => $value) {
+
+  foreach ($node_types as $key => $value) {
     simplify_uninstall_variable_del((array) $value);
   }
 }
 
+/**
+ * Delete variables.
+ */
 function simplify_uninstall_variable_del($node_type) {
   $node_type_type = $node_type['type'];
   $simplify_node_type = ($node_type_type == 'node') ? '' : '_' . $node_type_type;
+
   variable_del('simplify' . $simplify_node_type . '_node_hide_filter');
   variable_del('simplify' . $simplify_node_type . '_node_hide_menu');
   variable_del('simplify' . $simplify_node_type . '_node_hide_revision_information');
@@ -28,3 +33,4 @@ function simplify_uninstall_variable_del($node_type) {
   variable_del('simplify' . $simplify_node_type . '_node_hide_author');
   variable_del('simplify' . $simplify_node_type . '_node_hide_options');
 }
+

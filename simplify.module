@@ -1,5 +1,4 @@
 <?php
-
 /**
  * @file
  * Simplifies the admin interface.
@@ -39,6 +38,7 @@ function simplify_permission() {
  */
 function simplify_menu() {
   $items = array();
+
   $items['admin/config/user-interface/simplify'] = array(
     'title' => 'Simplify',
     'description' => 'Adjust Simplify configuration options.',
@@ -47,6 +47,7 @@ function simplify_menu() {
     'access arguments' => array('administer simplify'),
     'type' => MENU_NORMAL_ITEM,
   );
+
   return $items;
 }
 
@@ -55,15 +56,18 @@ function simplify_menu() {
  */
 function simplify_form_alter(&$form, &$form_state, $form_id) {
   global $user;
+
   switch ($form_id) {
     case ('_node_form' == drupal_substr($form_id, -10)):
-      // All nodes forms.
-      // Check role to hide items, but never show for administrator.
+      // All nodes forms
+      // Check role to hide items, but never show for administrator
       if (1 != $user->uid && user_access('simplify node hide settings')) {
         $node_types = node_type_get_types();
-        // Add general node to list of node types (all nodes).
+
+        // Add general node to list of node types (all nodes)
         array_push($node_types, array('type' => 'node'));
-        foreach ($node_types AS $key => $value) {
+
+        foreach ($node_types as $key => $value) {
           $value = (array) $value;
           if (str_replace('_node_form', '', $form_id) == $value['type'] || 'node' == $value['type']) {
             simplify_form_alter_unset($form, (array) $value);
@@ -73,10 +77,14 @@ function simplify_form_alter(&$form, &$form_state, $form_id) {
   }
 }
 
+/**
+ * Hide specified form items.
+ */
 function simplify_form_alter_unset(&$form, $node_type) {
   $node_type_type = $node_type['type'];
   $simplify_node_type = ($node_type_type == 'node') ? '' : '_' . $node_type_type;
-  // Hide specified form items if they are checked.
+
+  // Hide specified form items if they are checked
   if (variable_get('simplify' . $simplify_node_type . '_node_hide_filter')) {
     drupal_add_js('jQuery().ready(function(){jQuery(".filter-wrapper").hide();});', 'inline');
   }
@@ -106,11 +114,14 @@ function simplify_form_alter_unset(&$form, $node_type) {
 function simplify_admin_settings() {
   $form = array();
   $node_types = node_type_get_types();
-  // Add general node to list of node types (all nodes).
+
+  // Add general node to list of node types (all nodes)
   array_unshift($node_types, array('type' => 'node', 'name' => 'All'));
-  foreach ($node_types AS $key => $value) {
+
+  foreach ($node_types as $key => $value) {
     simplify_get_admin_settings_array($form, (array) $value);
   }
+
   return system_settings_form($form);
 }
 
@@ -120,6 +131,7 @@ function simplify_admin_settings() {
 function simplify_get_admin_settings_array(&$form, $node_type) {
   $node_type_type = $node_type['type'];
   $node_type_name = $node_type['name'];
+
   $form['simplify'][$node_type_type] = array(
     '#type' => 'fieldset',
     '#title' => t($node_type_name),
@@ -162,3 +174,4 @@ function simplify_get_admin_settings_array(&$form, $node_type) {
     '#default_value' => variable_get('simplify' . $simplify_node_type . '_node_hide_options'),
   );
 }
+
