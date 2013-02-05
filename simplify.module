@@ -1,17 +1,15 @@
 <?php
 /**
  * @file
- * Simplifies the admin interface.
+ * Simplifies the user interface by hiding particular fields.
  */
 
 /**
  * Implements hook_help().
  */
 function simplify_help($path, $arg) {
+  // TODO: Rewrite
   switch ($path) {
-    case 'admin/config/user-interface/simplify':
-      $output = '<p>' . t('Check boxes to hide those items from the admin interface.') . '</p>';
-      return $output;
     case 'admin/help#simplify':
       $output = '<h3>' . t('About') . '</h3>';
       $output .= '<p>' . t('The Simplify module offers the ability to simplify the admin interface through simple on/off checkboxes. If desired, you may disable the Simplify module from the <a href="@modules">Module administration page</a>. See the <a href="@project">Simplify project page</a> page for more information.', array('@modules' => url('admin/modules'), '@project' => 'http://drupal.org/project/simplify')) . '</p>';
@@ -27,8 +25,8 @@ function simplify_permission() {
     'administer simplify' => array(
       'title' => t('Administer simplify'),
     ),
-    'simplify node hide settings' => array(
-      'title' => t('Simplify node hide settings'),
+    'view hidden fields' => array(
+      'title' => t('View hidden fields'),
     ),
   );
 }
@@ -39,139 +37,200 @@ function simplify_permission() {
 function simplify_menu() {
   $items = array();
 
+  // Add global configuration form
   $items['admin/config/user-interface/simplify'] = array(
     'title' => 'Simplify',
-    'description' => 'Adjust Simplify configuration options.',
+    'description' => 'Configure hidden fields globally.',
     'page callback' => 'drupal_get_form',
-    'page arguments' => array('simplify_admin_settings'),
+    'page arguments' => array('simplify_global_configuration_form'),
     'access arguments' => array('administer simplify'),
-    'type' => MENU_NORMAL_ITEM,
   );
 
   return $items;
 }
 
 /**
- * Implements hook_form_alter().
+ * Simplify global configuration form.
  */
-function simplify_form_alter(&$form, &$form_state, $form_id) {
-  global $user;
+function simplify_global_configuration_form($form, &$form_state) {
+  // Nodes
+  $form['nodes'] = array(
+    '#type' => 'fieldset',
+    '#title' => t('Nodes'),
+    '#description' => t("These fields will be hidden from <em>all</em> node forms. Alternatively, to hide fields from node forms of a particular content type, edit the content type and configure the hidden fields there."),
+  );
+  $form['nodes']['simplify_nodes_global'] = array(
+    '#type' => 'checkboxes',
+    '#title' => t('Hide'),
+    '#options' => simplify_get_fields('nodes'),
+    '#default_value' => variable_get('simplify_nodes_global', array()),
+  );
 
-  switch ($form_id) {
-    case ('_node_form' == drupal_substr($form_id, -10)):
-      // All nodes forms
-      // Check role to hide items, but never show for administrator
-      if (1 != $user->uid && user_access('simplify node hide settings')) {
-        $node_types = node_type_get_types();
-
-        // Add general node to list of node types (all nodes)
-        array_push($node_types, array('type' => 'node'));
-
-        foreach ($node_types as $key => $value) {
-          $value = (array) $value;
-          if (str_replace('_node_form', '', $form_id) == $value['type'] || 'node' == $value['type']) {
-            simplify_form_alter_unset($form, (array) $value);
-          }
-        }
-      }
-  }
-}
-
-/**
- * Hide specified form items.
- */
-function simplify_form_alter_unset(&$form, $node_type) {
-  $node_type_type = $node_type['type'];
-  $simplify_node_type = ($node_type_type == 'node') ? '' : '_' . $node_type_type;
-
-  // Hide specified form items if they are checked
-  if (variable_get('simplify' . $simplify_node_type . '_node_hide_filter')) {
-    drupal_add_js('jQuery().ready(function(){jQuery(".filter-wrapper").hide();});', 'inline');
-  }
-  if (variable_get('simplify' . $simplify_node_type . '_node_hide_menu')) {
-    $form['menu']['#access'] = FALSE;
-  }
-  if (variable_get('simplify' . $simplify_node_type . '_node_hide_revision_information')) {
-    $form['revision_information']['#access'] = FALSE;
-  }
-  if (variable_get('simplify' . $simplify_node_type . '_node_hide_path')) {
-    $form['path']['#access'] = FALSE;
-  }
-  if (variable_get('simplify' . $simplify_node_type . '_node_hide_comment_settings')) {
-    $form['comment_settings']['#access'] = FALSE;
-  }
-  if (variable_get('simplify' . $simplify_node_type . '_node_hide_author')) {
-    $form['author']['#access'] = FALSE;
-  }
-  if (variable_get('simplify' . $simplify_node_type . '_node_hide_options')) {
-    $form['options']['#access'] = FALSE;
-  }
-}
-
-/**
- * Form builder. Simplify admin settings.
- */
-function simplify_admin_settings() {
-  $form = array();
-  $node_types = node_type_get_types();
-
-  // Add general node to list of node types (all nodes)
-  array_unshift($node_types, array('type' => 'node', 'name' => 'All'));
-
-  foreach ($node_types as $key => $value) {
-    simplify_get_admin_settings_array($form, (array) $value);
-  }
+  // Remove empty values from saved variables (see: http://drupal.org/node/61760#comment-402631)
+  $form['array_filter'] = array(
+    '#type' => 'hidden',
+  );
 
   return system_settings_form($form);
 }
 
 /**
- * Array builder. Simplify admin settings.
+ * Implements hook_form_FORM_ID_alter() for node_type_form.
  */
-function simplify_get_admin_settings_array(&$form, $node_type) {
-  $node_type_type = $node_type['type'];
-  $node_type_name = $node_type['name'];
+function simplify_form_node_type_form_alter(&$form, &$form_state, $form_id) {
+  $type = $form['#node_type'];
 
-  $form['simplify'][$node_type_type] = array(
+  // Nodes
+  $form['simplify'] = array(
     '#type' => 'fieldset',
-    '#title' => t($node_type_name),
-    '#description' => '<p>' . t("Checked settings apply to $node_type_name nodes.") . '</p>',
+    '#title' => t('Simplify'),
+    '#description' => t("These fields will be hidden from <em>@type</em> node forms. Disabled checkboxes indicate fields that have been hidden globally on the <a href=\"@global\">Simplify administration page</a>.", array('@type' => $type->name, '@global' => url('admin/config/user-interface/simplify'))),
+    '#access' => user_access('administer simplify'),
+    '#group' => 'additional_settings',
   );
-  $simplify_node_type = ($node_type_type == 'node') ? '' : '_' . $node_type_type;
-  $form['simplify'][$node_type_type]['simplify' . $simplify_node_type . '_node_hide_filter'] = array(
-    '#type' => 'checkbox',
-    '#title' => t('Hide text format settings'),
-    '#default_value' => variable_get('simplify' . $simplify_node_type . '_node_hide_filter'),
+  $form['simplify']['simplify_nodes'] = array(
+    '#type' => 'checkboxes',
+    '#title' => t('Hide'),
+    '#options' => simplify_get_fields('nodes'),
+    '#default_value' => variable_get('simplify_nodes_' . $type->type, array()),
+    '#after_build' => array('simplify_disable_globally_hidden_checkboxes'),
   );
-  $form['simplify'][$node_type_type]['simplify' . $simplify_node_type . '_node_hide_menu'] = array(
-    '#type' => 'checkbox',
-    '#title' => t('Hide menu settings'),
-    '#default_value' => variable_get('simplify' . $simplify_node_type . '_node_hide_menu'),
-  );
-  $form['simplify'][$node_type_type]['simplify' . $simplify_node_type . '_node_hide_revision_information'] = array(
-    '#type' => 'checkbox',
-    '#title' => t('Hide revision information'),
-    '#default_value' => variable_get('simplify' . $simplify_node_type . '_node_hide_revision_information'),
-  );
-  $form['simplify'][$node_type_type]['simplify' . $simplify_node_type . '_node_hide_path'] = array(
-    '#type' => 'checkbox',
-    '#title' => t('Hide path settings'),
-    '#default_value' => variable_get('simplify' . $simplify_node_type . '_node_hide_path'),
-  );
-  $form['simplify'][$node_type_type]['simplify' . $simplify_node_type . '_node_hide_comment_settings'] = array(
-    '#type' => 'checkbox',
-    '#title' => t('Hide comment settings'),
-    '#default_value' => variable_get('simplify' . $simplify_node_type . '_node_hide_comment_settings'),
-  );
-  $form['simplify'][$node_type_type]['simplify' . $simplify_node_type . '_node_hide_author'] = array(
-    '#type' => 'checkbox',
-    '#title' => t('Hide author information'),
-    '#default_value' => variable_get('simplify' . $simplify_node_type . '_node_hide_author'),
-  );
-  $form['simplify'][$node_type_type]['simplify' . $simplify_node_type . '_node_hide_options'] = array(
-    '#type' => 'checkbox',
-    '#title' => t('Hide publishing options'),
-    '#default_value' => variable_get('simplify' . $simplify_node_type . '_node_hide_options'),
-  );
+}
+
+/**
+ * Implements hook_form_BASE_FORM_ID_alter() form node_form.
+ */
+function simplify_form_node_form_alter(&$form, &$form_state, $form_id) {
+  $node = $form['#node'];
+
+  // Get array of fields to hide
+  $global_fields = variable_get('simplify_nodes_global', array());
+  $type_fields = variable_get('simplify_nodes_' . $node->type, array());
+  $fields = array_merge($global_fields, $type_fields);
+
+  // Hide fields
+  simplify_hide_fields($fields, $form);
+}
+
+/**
+ * Disable checkboxes to indicate fields have been hidden globally.
+ */
+function simplify_disable_globally_hidden_checkboxes($element, &$form_state) {
+  // Get globally hidden fields
+  $global_fields = variable_get($element['#name'] . '_global', array());
+
+  // Disable any globally hidden fields
+  foreach (element_children($element) as $field) {
+    if (in_array($field, $global_fields)) {
+      $element[$field]['#checked'] = TRUE;
+      $element[$field]['#attributes']['disabled'] = 'disabled';
+    }
+  }
+
+  return $element;
+}
+
+/**
+ * Hide fields from all users without the 'View hidden fields' permission.
+ */
+function simplify_hide_fields($fields, &$form) {
+  if (!empty($fields) && !user_access('view hidden fields')) {
+    foreach ($fields as $field) {
+      simplify_hide_field($field, $form);
+    }
+  }
+}
+
+/**
+ * Get an array of fields (by type) that can be hidden.
+ */
+function simplify_get_fields($type) {
+  $fields = array();
+
+  switch ($type) {
+    // Nodes
+    case 'nodes':
+      // Drupal core
+      $fields['author'] = t('Authoring information');
+      $fields['format'] = t('Text format selection');
+      $fields['options'] = t('Publishing options');
+      $fields['revision'] = t('Revision information');
+      if (module_exists('book')) {
+        $fields['book'] = t('Book outline');
+      }
+      if (module_exists('comment')) {
+        $fields['comment'] = t('Comment settings');
+      }
+      if (module_exists('menu')) {
+        $fields['menu'] = t('Menu settings');
+      }
+      if (module_exists('path')) {
+        $fields['path'] = t('URL path settings');
+      }
+      // Third-party modules
+      if (module_exists('redirect')) {
+        $fields['redirect'] = t('URL redirects');
+      }
+    break;
+  }
+
+  return $fields;
+}
+
+/**
+ * Hide a given field.
+ */
+function simplify_hide_field($field, &$form) {
+  switch ($field) {
+
+    // Authoring information
+    case 'author':
+      $form['author']['#access'] = FALSE;
+    break;
+
+    // Text format selection
+    case 'format':
+      $js = 'jQuery(document).ready(function($) {
+        $("#' . $form['#id'] . ' fieldset.filter-wrapper").hide();
+      });';
+      drupal_add_js($js, 'inline');
+    break;
+
+    // Publishing options
+    case 'options':
+      $form['options']['#access'] = FALSE;
+    break;
+
+    // Revision information
+    case 'revision':
+      $form['revision_information']['#access'] = FALSE;
+    break;
+
+    // Book outline
+    case 'book':
+      $form['book']['#access'] = FALSE;
+    break;
+
+    // Comment settings
+    case 'comment':
+      $form['comment_settings']['#access'] = FALSE;
+    break;
+
+    // Menu settings
+    case 'menu':
+      $form['menu']['#access'] = FALSE;
+    break;
+
+    // URL path settings
+    case 'path':
+      $form['path']['#access'] = FALSE;
+    break;
+
+    // URL redirects
+    case 'redirect':
+      $form['redirect']['#access'] = FALSE;
+    break;
+
+  }
 }
 

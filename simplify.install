@@ -5,32 +5,19 @@
  */
 
 /**
- * Implement hook_uninstall().
+ * Implements hook_uninstall().
  */
 function simplify_uninstall() {
-  $node_types = node_type_get_types();
+  $node_types = node_type_get_names();
 
-  // Add general node to list of node types (all nodes)
-  array_unshift($node_types, array('type' => 'node'));
+  // Delete global variables
+  variable_del('simplify_nodes_global');
 
-  foreach ($node_types as $key => $value) {
-    simplify_uninstall_variable_del((array) $value);
+  // Delete node variables
+  foreach ($node_types as $type => $name) {
+    variable_del('simplify_nodes_' . $type);
   }
 }
 
-/**
- * Delete variables.
- */
-function simplify_uninstall_variable_del($node_type) {
-  $node_type_type = $node_type['type'];
-  $simplify_node_type = ($node_type_type == 'node') ? '' : '_' . $node_type_type;
-
-  variable_del('simplify' . $simplify_node_type . '_node_hide_filter');
-  variable_del('simplify' . $simplify_node_type . '_node_hide_menu');
-  variable_del('simplify' . $simplify_node_type . '_node_hide_revision_information');
-  variable_del('simplify' . $simplify_node_type . '_node_hide_path');
-  variable_del('simplify' . $simplify_node_type . '_node_hide_comment_settings');
-  variable_del('simplify' . $simplify_node_type . '_node_hide_author');
-  variable_del('simplify' . $simplify_node_type . '_node_hide_options');
-}
+// TODO: Add update function to convert variable names from 2.x
 
