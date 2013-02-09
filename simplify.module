@@ -66,6 +66,21 @@ function simplify_global_configuration_form($form, &$form_state) {
     '#default_value' => variable_get('simplify_nodes_global', array()),
   );
 
+  // Comments
+  if (module_exists('comment')) {
+    $form['comments'] = array(
+      '#type' => 'fieldset',
+      '#title' => t('Comments'),
+      '#description' => t("These fields will be hidden from <em>all</em> comment forms. Alternatively, to hide fields from comment forms for nodes of a particular content type, edit the content type and configure the hidden fields there."),
+    );
+    $form['comments']['simplify_comments_global'] = array(
+      '#type' => 'checkboxes',
+      '#title' => t('Hide'),
+      '#options' => simplify_get_fields('comments'),
+      '#default_value' => variable_get('simplify_comments_global', array()),
+    );
+  }
+
   // Remove empty values from saved variables (see: http://drupal.org/node/61760#comment-402631)
   $form['array_filter'] = array(
     '#type' => 'hidden',
@@ -95,6 +110,23 @@ function simplify_form_node_type_form_alter(&$form, &$form_state, $form_id) {
     '#default_value' => variable_get('simplify_nodes_' . $type->type, array()),
     '#after_build' => array('simplify_disable_globally_hidden_checkboxes'),
   );
+
+  // Comments
+  if (module_exists('comment')) {
+    $form['comment']['simplify'] = array(
+      '#type' => 'fieldset',
+      '#title' => t('Simplify'),
+      '#description' => t("These fields will be hidden from <em>@type</em> comment forms. Disabled checkboxes indicate fields that have been hidden globally on the <a href=\"@global\">Simplify administration page</a>.", array('@type' => $type->name, '@global' => url('admin/config/user-interface/simplify'))),
+      '#access' => user_access('administer simplify'),
+    );
+    $form['comment']['simplify']['simplify_comments'] = array(
+      '#type' => 'checkboxes',
+      '#title' => t('Hide'),
+      '#options' => simplify_get_fields('comments'),
+      '#default_value' => variable_get('simplify_comments_' . $type->type, array()),
+      '#after_build' => array('simplify_disable_globally_hidden_checkboxes'),
+    );
+  }
 }
 
 /**
@@ -106,6 +138,21 @@ function simplify_form_node_form_alter(&$form, &$form_state, $form_id) {
   // Get array of fields to hide
   $global_fields = variable_get('simplify_nodes_global', array());
   $type_fields = variable_get('simplify_nodes_' . $node->type, array());
+  $fields = array_merge($global_fields, $type_fields);
+
+  // Hide fields
+  simplify_hide_fields($fields, $form);
+}
+
+/**
+ * Implements hook_form_BASE_FORM_ID_alter() form comment_form.
+ */
+function simplify_form_comment_form_alter(&$form, &$form_state, $form_id) {
+  $node = $form['#node'];
+
+  // Get array of fields to hide
+  $global_fields = variable_get('simplify_comments_global', array());
+  $type_fields = variable_get('simplify_comments_' . $node->type, array());
   $fields = array_merge($global_fields, $type_fields);
 
   // Hide fields
@@ -171,6 +218,12 @@ function simplify_get_fields($type) {
       if (module_exists('redirect')) {
         $fields['redirect'] = t('URL redirects');
       }
+    break;
+
+    // Comments
+    case 'comments':
+      // Drupal core
+      $fields['format'] = t('Text format selection');
     break;
   }
 
