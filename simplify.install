@@ -12,10 +12,14 @@ function simplify_uninstall() {
 
   // Delete global variables
   variable_del('simplify_nodes_global');
+  variable_del('simplify_comments_global');
 
   // Delete node variables
   foreach ($node_types as $type => $name) {
     variable_del('simplify_nodes_' . $type);
+
+    // Delete comment variables
+    variable_del('simplify_comments_' . $type);
   }
 }
 
