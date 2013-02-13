@@ -127,12 +127,14 @@ function simplify_form_node_type_form_alter(&$form, &$form_state, $form_id) {
   );
 
   // Comments
-  if (module_exists('comment')) {
+  if (!empty($form['comment'])) {
     $form['comment']['simplify'] = array(
       '#type' => 'fieldset',
       '#title' => t('Simplify'),
       '#description' => t("These fields will be hidden from <em>@type</em> comment forms. Disabled checkboxes indicate fields that have been hidden globally on the <a href=\"@global\">Simplify administration page</a>.", array('@type' => $type->name, '@global' => url('admin/config/user-interface/simplify'))),
       '#access' => user_access('administer simplify'),
+      '#collapsible' => TRUE,
+      '#collapsed' => TRUE,
     );
     $form['comment']['simplify']['simplify_comments'] = array(
       '#type' => 'checkboxes',
@@ -186,7 +188,7 @@ function simplify_taxonomy_form_vocabulary_submit($form, &$form_state) {
 }
 
 /**
- * Implements hook_form_BASE_FORM_ID_alter() form node_form.
+ * Implements hook_form_BASE_FORM_ID_alter() for node_form.
  */
 function simplify_form_node_form_alter(&$form, &$form_state, $form_id) {
   $node = $form['#node'];
@@ -201,7 +203,7 @@ function simplify_form_node_form_alter(&$form, &$form_state, $form_id) {
 }
 
 /**
- * Implements hook_form_BASE_FORM_ID_alter() form comment_form.
+ * Implements hook_form_BASE_FORM_ID_alter() for comment_form.
  */
 function simplify_form_comment_form_alter(&$form, &$form_state, $form_id) {
   $node = $form['#node'];
@@ -326,24 +328,6 @@ function simplify_hide_field($field, &$form) {
       $form['author']['#access'] = FALSE;
     break;
 
-    // Text format selection
-    case 'format':
-      $js = 'jQuery(document).ready(function($) {
-        $("#' . $form['#id'] . ' fieldset.filter-wrapper").hide();
-      });';
-      drupal_add_js($js, 'inline');
-    break;
-
-    // Publishing options
-    case 'options':
-      $form['options']['#access'] = FALSE;
-    break;
-
-    // Revision information
-    case 'revision':
-      $form['revision_information']['#access'] = FALSE;
-    break;
-
     // Book outline
     case 'book':
       $form['book']['#access'] = FALSE;
@@ -354,9 +338,22 @@ function simplify_hide_field($field, &$form) {
       $form['comment_settings']['#access'] = FALSE;
     break;
 
+    // Text format selection
+    case 'format':
+      $js = 'jQuery(document).ready(function($) {
+        $("#' . $form['#id'] . ' fieldset.filter-wrapper").hide();
+      });';
+      drupal_add_js($js, 'inline');
+    break;
+
     // Menu settings
     case 'menu':
       $form['menu']['#access'] = FALSE;
+    break;
+
+    // Publishing options
+    case 'options':
+      $form['options']['#access'] = FALSE;
     break;
 
     // URL path settings
@@ -372,6 +369,11 @@ function simplify_hide_field($field, &$form) {
     // Relations
     case 'relations':
       $form['relations']['#access'] = FALSE;
+    break;
+
+    // Revision information
+    case 'revision':
+      $form['revision_information']['#access'] = FALSE;
     break;
 
   }
