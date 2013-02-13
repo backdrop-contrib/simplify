@@ -81,6 +81,21 @@ function simplify_global_configuration_form($form, &$form_state) {
     );
   }
 
+  // Taxonomy
+  if (module_exists('taxonomy')) {
+    $form['taxonomy'] = array(
+      '#type' => 'fieldset',
+      '#title' => t('Taxonomy'),
+      '#description' => t("These fields will be hidden from <em>all</em> taxonomy term forms. Alternatively, to hide fields from taxonomy term forms for a particular vocabulary, edit the vocabulary and configure the hidden fields there."),
+    );
+    $form['taxonomy']['simplify_taxonomy_global'] = array(
+      '#type' => 'checkboxes',
+      '#title' => t('Hide'),
+      '#options' => simplify_get_fields('taxonomy'),
+      '#default_value' => variable_get('simplify_taxonomy_global', array()),
+    );
+  }
+
   // Remove empty values from saved variables (see: http://drupal.org/node/61760#comment-402631)
   $form['array_filter'] = array(
     '#type' => 'hidden',
@@ -130,6 +145,47 @@ function simplify_form_node_type_form_alter(&$form, &$form_state, $form_id) {
 }
 
 /**
+ * Implements hook_form_FORM_ID_alter() for taxonomy_form_vocabulary.
+ */
+function simplify_form_taxonomy_form_vocabulary_alter(&$form, &$form_state, $form_id) {
+  $vocabulary = $form['#vocabulary'];
+
+  // Taxonomy
+  $form['simplify'] = array(
+    '#type' => 'fieldset',
+    '#title' => t('Simplify'),
+    '#description' => t("These fields will be hidden from <em>@vocabulary</em> taxonomy term forms. Disabled checkboxes indicate fields that have been hidden globally on the <a href=\"@global\">Simplify administration page</a>.", array('@vocabulary' => $vocabulary->name, '@global' => url('admin/config/user-interface/simplify'))),
+    '#access' => user_access('administer simplify'),
+    '#collapsible' => TRUE,
+    '#collapsed' => TRUE,
+  );
+  $form['simplify']['simplify_taxonomy'] = array(
+    '#type' => 'checkboxes',
+    '#title' => t('Hide'),
+    '#options' => simplify_get_fields('taxonomy'),
+    '#default_value' => variable_get('simplify_taxonomy_' . $vocabulary->machine_name, array()),
+    '#after_build' => array('simplify_disable_globally_hidden_checkboxes'),
+  );
+
+  // Add custom submit function
+  $form['#submit'][] = 'simplify_taxonomy_form_vocabulary_submit';
+}
+
+/**
+ * Custom submit function for taxonomy_form_vocabulary.
+ */
+function simplify_taxonomy_form_vocabulary_submit($form, &$form_state) {
+  $vocabulary = $form_state['vocabulary'];
+
+  // Get fields
+  $fields = $form_state['values']['simplify_taxonomy'];
+  $fields = array_keys(array_filter($fields));
+
+  // Values aren't saved to a variable by default, so do it manually
+  variable_set('simplify_taxonomy_' . $vocabulary->machine_name, $fields);
+}
+
+/**
  * Implements hook_form_BASE_FORM_ID_alter() form node_form.
  */
 function simplify_form_node_form_alter(&$form, &$form_state, $form_id) {
@@ -154,6 +210,21 @@ function simplify_form_comment_form_alter(&$form, &$form_state, $form_id) {
   $global_fields = variable_get('simplify_comments_global', array());
   $type_fields = variable_get('simplify_comments_' . $node->type, array());
   $fields = array_merge($global_fields, $type_fields);
+
+  // Hide fields
+  simplify_hide_fields($fields, $form);
+}
+
+/**
+ * Implements hook_form_FORM_ID_alter() for taxonomy_form_term.
+ */
+function simplify_form_taxonomy_form_term_alter(&$form, &$form_state, $form_id) {
+  $vocabulary = $form['#vocabulary'];
+
+  // Get array of fields to hide
+  $global_fields = variable_get('simplify_taxonomy_global', array());
+  $vocabulary_fields = variable_get('simplify_taxonomy_' . $vocabulary->machine_name, array());
+  $fields = array_merge($global_fields, $vocabulary_fields);
 
   // Hide fields
   simplify_hide_fields($fields, $form);
@@ -225,6 +296,20 @@ function simplify_get_fields($type) {
       // Drupal core
       $fields['format'] = t('Text format selection');
     break;
+
+    // Taxonomy
+    case 'taxonomy':
+      // Drupal core
+      $fields['format'] = t('Text format selection');
+      $fields['relations'] = t('Relations');
+      if (module_exists('path')) {
+        $fields['path'] = t('URL alias');
+      }
+      // Third-party modules
+      if (module_exists('redirect')) {
+        $fields['redirect'] = t('URL redirects');
+      }
+    break;
   }
 
   return $fields;
@@ -282,6 +367,11 @@ function simplify_hide_field($field, &$form) {
     // URL redirects
     case 'redirect':
       $form['redirect']['#access'] = FALSE;
+    break;
+
+    // Relations
+    case 'relations':
+      $form['relations']['#access'] = FALSE;
     break;
 
   }

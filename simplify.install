@@ -9,10 +9,12 @@
  */
 function simplify_uninstall() {
   $node_types = node_type_get_names();
+  $vocabularies = taxonomy_vocabulary_get_names();
 
   // Delete global variables
   variable_del('simplify_nodes_global');
   variable_del('simplify_comments_global');
+  variable_del('simplify_taxonomy_global');
 
   // Delete node variables
   foreach ($node_types as $type => $name) {
@@ -20,6 +22,11 @@ function simplify_uninstall() {
 
     // Delete comment variables
     variable_del('simplify_comments_' . $type);
+  }
+
+  // Delete taxonomy variables
+  foreach ($vocabularies as $name => $vocabulary) {
+    variable_del('simplify_taxonomy_' . $name);
   }
 }
 
