@@ -16,11 +16,9 @@ function simplify_uninstall() {
   variable_del('simplify_comments_global');
   variable_del('simplify_taxonomy_global');
 
-  // Delete node variables
+  // Delete node & comment variables
   foreach ($node_types as $type => $name) {
     variable_del('simplify_nodes_' . $type);
-
-    // Delete comment variables
     variable_del('simplify_comments_' . $type);
   }
 
