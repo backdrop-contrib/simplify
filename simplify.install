@@ -30,5 +30,22 @@ function simplify_uninstall() {
   }
 }
 
-// TODO: Add update function to convert variable names from 2.x
+/**
+ * Migrate settings from 2.x to 3.x.
+ */
+function simplify_update_7300(&$sandbox) {
+  // Migrate permissions
+  $roles = user_roles();
+  $role_permissions = user_role_permissions($roles);
+  foreach ($role_permissions as $rid => $permissions) {
+    $new_permissions = array();
+    if (isset($permissions['simplify node hide settings'])) {
+      $new_permissions['simplify node hide settings'] = FALSE;
+    }
+    else {
+      $new_permissions['view hidden fields'] = TRUE;
+    }
+    user_role_change_permissions($rid, $new_permissions);
+  }
+}
 
