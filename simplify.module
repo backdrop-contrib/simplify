@@ -41,10 +41,8 @@ function simplify_help($path, $arg) {
       $output .= '<dt>' . t('Example use case') . '</dt>';
       $output .= '<dd>' . t("The global and type-specific configurations can be used together. Say you weren't using node revisions at all on your site; you would select the Revision Information field on the global configuration page so that it was hidden from all node forms (articles, pages, etc.). Say that you then wanted to allow content editors to create menu items for Page nodes, but not for Article nodes; you would select the Menu Settings field for just the Article content type (not for the Page content type nor on the global configuration page) so that it was hidden from just the Article node forms.") . '</dd>';
       $output .= '</dl>';
-    break;
+      return $output;
   }
-
-  return $output;
 }
 
 /**
