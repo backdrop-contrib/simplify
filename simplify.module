@@ -18,9 +18,9 @@ function simplify_help($path, $arg) {
       $output .= '<dd>' . t("Different types of fields can be hidden with the Simplify module. Currently supported field types include:");
       $output .= theme('item_list', array(
         'items' => array(
-          t('Nodes (e.g. publishing options)'),
-          t('Comments (e.g. text format selection)'),
-          t('Taxonomy (e.g. relations)'),
+          t('Nodes (e.g., publishing options)'),
+          t('Comments (e.g., text format selection)'),
+          t('Taxonomy (e.g., relations)'),
         ),
         'type' => 'ul',
       )) . '</dd>';
