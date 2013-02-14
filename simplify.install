@@ -45,5 +45,29 @@ function simplify_update_7300(&$sandbox) {
     }
     user_role_change_permissions($rid, $new_permissions);
   }
+
+  // Migrate variables
+  $fields = array(
+    'author' => 'author',
+    'comment_settings' => 'comment',
+    'filter' => 'format',
+    'menu' => 'menu',
+    'options' => 'options',
+    'path' => 'path',
+    'revision_information' => 'revision',
+  );
+  $node_types = array('Node') + node_type_get_names();
+  foreach ($node_types as $type => $name) {
+    $type_old = $type ? '_' . $type : '';
+    $type_new = $type ? $type : 'global';
+    foreach ($fields as $field_old => $field_new) {
+      if (variable_get('simplify' . $type_old . '_node_hide_' . $field_old, 0)) {
+        $variable = variable_get('simplify_nodes_' . $type_new, array());
+        $variable[] = $field_new;
+        variable_set('simplify_nodes_' . $type_new, $variable);
+      }
+      variable_del('simplify' . $type_old . '_node_hide_' . $field_old);
+    }
+  }
 }
 
