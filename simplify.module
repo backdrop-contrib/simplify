@@ -319,6 +319,9 @@ function simplify_get_fields($type) {
       if (module_exists('redirect')) {
         $fields['redirect'] = t('URL redirects');
       }
+      if (module_exists('xmlsitemap_node')) {
+        $fields['xmlsitemap'] = t('XML sitemap');
+      }
     break;
 
     // Comments
@@ -338,6 +341,9 @@ function simplify_get_fields($type) {
       // Third-party modules
       if (module_exists('redirect')) {
         $fields['redirect'] = t('URL redirects');
+      }
+      if (module_exists('xmlsitemap_taxonomy')) {
+        $fields['xmlsitemap'] = t('XML sitemap');
       }
     break;
   }
@@ -402,6 +408,11 @@ function simplify_hide_field($field, &$form) {
     // Revision information
     case 'revision':
       $form['revision_information']['#access'] = FALSE;
+    break;
+
+    // XML sitemap
+    case 'xmlsitemap':
+      $form['xmlsitemap']['#access'] = FALSE;
     break;
 
   }
