@@ -316,6 +316,9 @@ function simplify_get_fields($type) {
         $fields['path'] = t('URL path settings');
       }
       // Third-party modules
+      if (module_exists('metatag')) {
+        $fields['metatag'] = t('Meta tags');
+      }
       if (module_exists('redirect')) {
         $fields['redirect'] = t('URL redirects');
       }
@@ -339,6 +342,9 @@ function simplify_get_fields($type) {
         $fields['path'] = t('URL alias');
       }
       // Third-party modules
+      if (module_exists('metatag')) {
+        $fields['metatag'] = t('Meta tags');
+      }
       if (module_exists('redirect')) {
         $fields['redirect'] = t('URL redirects');
       }
@@ -383,6 +389,11 @@ function simplify_hide_field($field, &$form) {
     // Menu settings
     case 'menu':
       $form['menu']['#access'] = FALSE;
+    break;
+
+    // Meta tags
+    case 'metatag':
+      $form['metatags']['#access'] = FALSE;
     break;
 
     // Publishing options
