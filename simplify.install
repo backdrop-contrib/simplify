@@ -21,6 +21,7 @@ function simplify_install() {
 function simplify_uninstall() {
   // Delete global variables
   variable_del('simplify_nodes_global');
+  variable_del('simplify_users_global');
   variable_del('simplify_comments_global');
   variable_del('simplify_taxonomy_global');
 

@@ -19,6 +19,7 @@ function simplify_help($path, $arg) {
       $output .= theme('item_list', array(
         'items' => array(
           t('Nodes (e.g., publishing options)'),
+          t('Users (e.g., contact settings)'),
           t('Comments (e.g., text format selection)'),
           t('Taxonomy (e.g., relations)'),
         ),
@@ -92,6 +93,19 @@ function simplify_global_configuration_form($form, &$form_state) {
     '#title' => t('Hide'),
     '#options' => simplify_get_fields('nodes'),
     '#default_value' => variable_get('simplify_nodes_global', array()),
+  );
+
+  // Users
+  $form['users'] = array(
+    '#type' => 'fieldset',
+    '#title' => t('Users'),
+    '#description' => t("These fields will be hidden from all user account forms."),
+  );
+  $form['users']['simplify_users_global'] = array(
+    '#type' => 'checkboxes',
+    '#title' => t('Hide'),
+    '#options' => simplify_get_fields('users'),
+    '#default_value' => variable_get('simplify_users_global', array()),
   );
 
   // Comments
@@ -216,6 +230,24 @@ function simplify_taxonomy_form_vocabulary_submit($form, &$form_state) {
 }
 
 /**
+ * Disable checkboxes to indicate fields have been hidden globally.
+ */
+function simplify_disable_globally_hidden_checkboxes($element, &$form_state) {
+  // Get globally hidden fields
+  $global_fields = variable_get($element['#name'] . '_global', array());
+
+  // Disable any globally hidden fields
+  foreach (element_children($element) as $field) {
+    if (in_array($field, $global_fields)) {
+      $element[$field]['#checked'] = TRUE;
+      $element[$field]['#attributes']['disabled'] = 'disabled';
+    }
+  }
+
+  return $element;
+}
+
+/**
  * Implements hook_form_BASE_FORM_ID_alter() for node_form.
  */
 function simplify_form_node_form_alter(&$form, &$form_state, $form_id) {
@@ -225,6 +257,28 @@ function simplify_form_node_form_alter(&$form, &$form_state, $form_id) {
   $global_fields = variable_get('simplify_nodes_global', array());
   $type_fields = variable_get('simplify_nodes_' . $node->type, array());
   $fields = array_merge($global_fields, $type_fields);
+
+  // Hide fields
+  simplify_hide_fields($fields, $form);
+}
+
+/**
+ * Implements hook_form_FORM_ID_alter() for user_profile_form.
+ */
+function simplify_form_user_profile_form_alter(&$form, &$form_state, $form_id) {
+  // Get array of fields to hide
+  $fields = variable_get('simplify_users_global', array());
+
+  // Hide fields
+  simplify_hide_fields($fields, $form);
+}
+
+/**
+ * Implements hook_form_FORM_ID_alter() for user_register_form.
+ */
+function simplify_form_user_register_form_alter(&$form, &$form_state, $form_id) {
+  // Get array of fields to hide
+  $fields = variable_get('simplify_users_global', array());
 
   // Hide fields
   simplify_hide_fields($fields, $form);
@@ -258,24 +312,6 @@ function simplify_form_taxonomy_form_term_alter(&$form, &$form_state, $form_id) 
 
   // Hide fields
   simplify_hide_fields($fields, $form);
-}
-
-/**
- * Disable checkboxes to indicate fields have been hidden globally.
- */
-function simplify_disable_globally_hidden_checkboxes($element, &$form_state) {
-  // Get globally hidden fields
-  $global_fields = variable_get($element['#name'] . '_global', array());
-
-  // Disable any globally hidden fields
-  foreach (element_children($element) as $field) {
-    if (in_array($field, $global_fields)) {
-      $element[$field]['#checked'] = TRUE;
-      $element[$field]['#attributes']['disabled'] = 'disabled';
-    }
-  }
-
-  return $element;
 }
 
 /**
@@ -324,6 +360,24 @@ function simplify_get_fields($type) {
       }
       if (module_exists('xmlsitemap_node')) {
         $fields['xmlsitemap'] = t('XML sitemap');
+      }
+    break;
+
+    // Users
+    case 'users':
+      // Drupal core
+      if (module_exists('contact')) {
+        $fields['contact'] = t('Contact settings');
+      }
+      if (module_exists('overlay')) {
+        $fields['overlay'] = t('Administrative overlay');
+      }
+      // Third-party modules
+      if (module_exists('metatag')) {
+        $fields['metatag'] = t('Meta tags');
+      }
+      if (module_exists('redirect')) {
+        $fields['redirect'] = t('URL redirects');
       }
     break;
 
@@ -378,6 +432,11 @@ function simplify_hide_field($field, &$form) {
       $form['comment_settings']['#access'] = FALSE;
     break;
 
+    // Contact settings
+    case 'contact':
+      $form['contact']['#access'] = FALSE;
+    break;
+
     // Text format selection
     case 'format':
       $js = 'jQuery(document).ready(function($) {
@@ -399,6 +458,11 @@ function simplify_hide_field($field, &$form) {
     // Publishing options
     case 'options':
       $form['options']['#access'] = FALSE;
+    break;
+
+    // Administrative overlay
+    case 'overlay':
+      $form['overlay_control']['#access'] = FALSE;
     break;
 
     // URL path settings
