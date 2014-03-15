@@ -366,6 +366,7 @@ function simplify_get_fields($type) {
     // Users
     case 'users':
       // Drupal core
+      $fields['format'] = t('Text format selection');
       if (module_exists('contact')) {
         $fields['contact'] = t('Contact settings');
       }
