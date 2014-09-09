@@ -453,6 +453,9 @@ function simplify_get_fields($type) {
     break;
   }
 
+  // Allow other modules to alter the array of fields that can be hidden
+  drupal_alter('simplify_get_fields', $fields, $type);
+
   return $fields;
 }
 
@@ -536,5 +539,8 @@ function simplify_hide_field($field, &$form) {
     break;
 
   }
+
+  // Allow other modules to alter the way fields are hidden
+  drupal_alter('simplify_hide_field', $form, $field);
 }
 
