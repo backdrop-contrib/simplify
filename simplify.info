@@ -1,6 +1,6 @@
 name = Simplify
 description = "Simplifies the user interface by hiding particular fields."
-core = 7.x
+backdrop = 1.x
 package = User interface
 configure = admin/config/user-interface/simplify
 
