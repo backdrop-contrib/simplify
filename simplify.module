@@ -28,7 +28,7 @@ function simplify_menu() {
   $items['admin/config/user-interface/simplify'] = array(
     'title' => 'Simplify',
     'description' => 'Configure hidden fields globally.',
-    'page callback' => 'drupal_get_form',
+    'page callback' => 'backdrop_get_form',
     'page arguments' => array('simplify_global_configuration_form'),
     'access arguments' => array('administer simplify'),
   );
@@ -111,7 +111,7 @@ function simplify_global_configuration_form($form, &$form_state) {
     );
   }
 
-  // Remove empty values from saved variables (see: http://drupal.org/node/61760#comment-402631)
+  // Remove empty values from saved variables (see: http://backdrop.org/node/61760#comment-402631)
   $form['array_filter'] = array(
     '#type' => 'hidden',
   );
@@ -329,7 +329,7 @@ function simplify_get_fields($type) {
   switch ($type) {
     // Nodes
     case 'nodes':
-      // Drupal core
+      // Backdrop core
       $fields['author'] = t('Authoring information');
       $fields['format'] = t('Text format selection');
       $fields['options'] = t('Publishing options');
@@ -360,7 +360,7 @@ function simplify_get_fields($type) {
 
     // Users
     case 'users':
-      // Drupal core
+      // Backdrop core
       $fields['format'] = t('Text format selection');
       if (module_exists('contact')) {
         $fields['contact'] = t('Contact settings');
@@ -376,13 +376,13 @@ function simplify_get_fields($type) {
 
     // Comments
     case 'comments':
-      // Drupal core
+      // Backdrop core
       $fields['format'] = t('Text format selection');
     break;
 
     // Taxonomy
     case 'taxonomy':
-      // Drupal core
+      // Backdrop core
       $fields['format'] = t('Text format selection');
       $fields['relations'] = t('Relations');
       if (module_exists('path')) {
@@ -402,13 +402,13 @@ function simplify_get_fields($type) {
 
     // Blocks
     case 'blocks':
-      // Drupal core
+      // Backdrop core
       $fields['format'] = t('Text format selection');
     break;
   }
 
   // Allow other modules to alter the array of fields that can be hidden
-  drupal_alter('simplify_get_fields', $fields, $type);
+  backdrop_alter('simplify_get_fields', $fields, $type);
 
   return $fields;
 }
@@ -444,7 +444,7 @@ function simplify_hide_field($field, &$form) {
       $js = 'jQuery(document).ready(function($) {
         $("#' . $form['#id'] . ' fieldset.filter-wrapper").hide();
       });';
-      drupal_add_js($js, 'inline');
+      backdrop_add_js($js, 'inline');
     break;
 
     // Menu settings
@@ -490,6 +490,6 @@ function simplify_hide_field($field, &$form) {
   }
 
   // Allow other modules to alter the way fields are hidden
-  drupal_alter('simplify_hide_field', $form, $field);
+  backdrop_alter('simplify_hide_field', $form, $field);
 }
 
