@@ -40,6 +40,8 @@ function simplify_menu() {
  * Simplify global configuration form.
  */
 function simplify_global_configuration_form($form, &$form_state) {
+  $config = config('simplify.global');
+
   // Nodes
   $form['nodes'] = array(
     '#type' => 'fieldset',
@@ -50,7 +52,7 @@ function simplify_global_configuration_form($form, &$form_state) {
     '#type' => 'checkboxes',
     '#title' => t('Hide'),
     '#options' => simplify_get_fields('nodes'),
-    '#default_value' => variable_get('simplify_nodes_global', array()),
+    '#default_value' => $config->get('nodes'),
   );
 
   // Users
@@ -63,7 +65,7 @@ function simplify_global_configuration_form($form, &$form_state) {
     '#type' => 'checkboxes',
     '#title' => t('Hide'),
     '#options' => simplify_get_fields('users'),
-    '#default_value' => variable_get('simplify_users_global', array()),
+    '#default_value' => $config->get('users'),
   );
 
   // Comments
@@ -77,7 +79,7 @@ function simplify_global_configuration_form($form, &$form_state) {
       '#type' => 'checkboxes',
       '#title' => t('Hide'),
       '#options' => simplify_get_fields('comments'),
-      '#default_value' => variable_get('simplify_comments_global', array()),
+      '#default_value' => $config->get('comments'),
     );
   }
 
@@ -92,7 +94,7 @@ function simplify_global_configuration_form($form, &$form_state) {
       '#type' => 'checkboxes',
       '#title' => t('Hide'),
       '#options' => simplify_get_fields('taxonomy'),
-      '#default_value' => variable_get('simplify_taxonomy_global', array()),
+      '#default_value' => $config->get('taxonomy'),
     );
   }
 
@@ -107,16 +109,41 @@ function simplify_global_configuration_form($form, &$form_state) {
       '#type' => 'checkboxes',
       '#title' => t('Hide'),
       '#options' => simplify_get_fields('blocks'),
-      '#default_value' => variable_get('simplify_blocks_global', array()),
+      '#default_value' => $config->get('blocks'),
     );
   }
 
-  // Remove empty values from saved variables (see: http://backdrop.org/node/61760#comment-402631)
-  $form['array_filter'] = array(
-    '#type' => 'hidden',
+  $form['actions'] = array(
+    '#type' => 'actions',
+    'submit' => array(
+      '#type' => 'submit',
+      '#value' => t('Save configuration'),
+    ),
   );
+  return $form;
+}
 
-  return system_settings_form($form);
+/**
+ * Submit function for simplify_global_configuration_form().
+ */
+function simplify_global_configuration_form_submit($form, &$form_state) {
+  $values = $form_state['values'];
+
+  $config = config('simplify.global');
+  $config->set('nodes', array_values(array_filter($values['simplify_nodes_global'])));
+  $config->set('users', array_values(array_filter($values['simplify_users_global'])));
+  if (isset($values['simplify_comments_global'])) {
+    $config->set('comments', array_values(array_filter($values['simplify_comments_global'])));
+  }
+  if (isset($values['simplify_taxonomy_global'])) {
+    $config->set('taxonomy', array_values(array_filter($values['simplify_taxonomy_global'])));
+  }
+  if (isset($values['simplify_blocks_global'])) {
+    $config->set('blocks', array_values(array_filter($values['simplify_blocks_global'])));
+  }
+  $config->save();
+
+  backdrop_set_message(t('The configuration options have been saved.'));
 }
 
 /**
@@ -126,6 +153,7 @@ function simplify_form_node_type_form_alter(&$form, &$form_state, $form_id) {
   $type = $form['#node_type'];
 
   // Nodes
+  $config_nodes = config('simplify.nodes');
   $form['simplify'] = array(
     '#type' => 'fieldset',
     '#title' => t('Simplify'),
@@ -137,12 +165,13 @@ function simplify_form_node_type_form_alter(&$form, &$form_state, $form_id) {
     '#type' => 'checkboxes',
     '#title' => t('Hide'),
     '#options' => simplify_get_fields('nodes'),
-    '#default_value' => variable_get('simplify_nodes_' . $type->type, array()),
+    '#default_value' => $config_nodes->get($type->type),
     '#after_build' => array('simplify_disable_globally_hidden_checkboxes'),
   );
 
   // Comments
   if (!empty($form['comment'])) {
+    $config_comments = config('simplify.comments');
     $form['comment']['simplify'] = array(
       '#type' => 'fieldset',
       '#title' => t('Simplify'),
@@ -155,9 +184,31 @@ function simplify_form_node_type_form_alter(&$form, &$form_state, $form_id) {
       '#type' => 'checkboxes',
       '#title' => t('Hide'),
       '#options' => simplify_get_fields('comments'),
-      '#default_value' => variable_get('simplify_comments_' . $type->type, array()),
+      '#default_value' => $config_comments->get($type->type),
       '#after_build' => array('simplify_disable_globally_hidden_checkboxes'),
     );
+  }
+
+  // Custom submit function
+  $form['#submit'][] = 'simplify_form_node_type_form_alter_submit';
+}
+
+/**
+ * Submit function for simplify_form_node_type_form_alter().
+ */
+function simplify_form_node_type_form_alter_submit($form, &$form_state) {
+  $values = $form_state['values'];
+
+  // Nodes
+  $config_nodes = config('simplify.nodes');
+  $config_nodes->set($values['type'], array_values(array_filter($values['simplify_nodes'])));
+  $config_nodes->save();
+
+  // Comments
+  if (isset($values['simplify_comments'])) {
+    $config_comments = config('simplify.comments');
+    $config_comments->set($values['type'], array_values(array_filter($values['simplify_comments'])));
+    $config_comments->save();
   }
 }
 
