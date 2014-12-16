@@ -19,6 +19,30 @@ function simplify_permission() {
 }
 
 /**
+ * Implements hook_config_info().
+ */
+function simplify_config_info() {
+  $prefixes['simplify.global'] = array(
+    'label' => t('Global fields'),
+    'group' => t('Simplify'),
+  );
+  $prefixes['simplify.nodes'] = array(
+    'label' => t('Node fields'),
+    'group' => t('Simplify'),
+  );
+  $prefixes['simplify.comments'] = array(
+    'label' => t('Comment fields'),
+    'group' => t('Simplify'),
+  );
+  $prefixes['simplify.taxonomy'] = array(
+    'label' => t('Taxonomy fields'),
+    'group' => t('Simplify'),
+  );
+
+  return $prefixes;
+}
+
+/**
  * Implements hook_menu().
  */
 function simplify_menu() {
