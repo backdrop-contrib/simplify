@@ -16,81 +16,50 @@ function simplify_install() {
 }
 
 /**
- * Implements hook_uninstall().
+ * Implements hook_update_last_removed().
  */
-function simplify_uninstall() {
-  // Delete global variables
-  variable_del('simplify_nodes_global');
-  variable_del('simplify_users_global');
-  variable_del('simplify_comments_global');
-  variable_del('simplify_taxonomy_global');
+function simplify_update_last_removed() {
+  return 7301;
+}
 
-  // Delete node & comment variables
+/**
+ * Convert variables to config.
+ */
+function simplify_update_1000(&$sandbox) {
+  // Global
+  $config_global = config('simplify.global');
+  $config_global->set('nodes', update_variable_get('simplify_nodes_global', array()));
+  $config_global->set('users', update_variable_get('simplify_users_global', array()));
+  $config_global->set('comments', update_variable_get('simplify_comments_global', array()));
+  $config_global->set('taxonomy', update_variable_get('simplify_taxonomy_global', array()));
+  $config_global->set('blocks', update_variable_get('simplify_blocks_global', array()));
+  $config_global->save();
+  update_variable_del('simplify_nodes_global');
+  update_variable_del('simplify_users_global');
+  update_variable_del('simplify_comments_global');
+  update_variable_del('simplify_taxonomy_global');
+  update_variable_del('simplify_blocks_global');
+
+  // Nodes & comments
   $node_types = node_type_get_names();
+  $config_nodes = config('simplify.nodes');
+  $config_comments = config('simplify.comments');
   foreach ($node_types as $type => $name) {
-    variable_del('simplify_nodes_' . $type);
-    variable_del('simplify_comments_' . $type);
+    $config_nodes->set($type, update_variable_get('simplify_nodes_' . $type, array()));
+    $config_comments->set($type, update_variable_get('simplify_comments_' . $type, array()));
+    update_variable_del('simplify_nodes_' . $type);
+    update_variable_del('simplify_comments_' . $type);
   }
+  $config_nodes->save();
+  $config_comments->save();
 
-  // Delete taxonomy variables
-  if (module_exists('taxonomy')) {
-    $vocabularies = taxonomy_vocabulary_get_names();
-    foreach ($vocabularies as $name => $vocabulary) {
-      variable_del('simplify_taxonomy_' . $name);
-    }
+  // Taxonomy
+  $vocabularies = taxonomy_vocabulary_get_names();
+  $config_taxonomy = config('simplify.taxonomy');
+  foreach ($vocabularies as $name => $vocabulary) {
+    $config_taxonomy->set($name, update_variable_get('simplify_taxonomy_' . $name, array()));
+    update_variable_del('simplify_taxonomy_' . $name);
   }
-}
-
-/**
- * Migrate settings from 2.x to 3.x.
- */
-function simplify_update_7300(&$sandbox) {
-  // Migrate permissions
-  $roles = user_roles();
-  $role_permissions = user_role_permissions($roles);
-  foreach ($role_permissions as $rid => $permissions) {
-    $new_permissions = array();
-    if (isset($permissions['simplify node hide settings'])) {
-      $new_permissions['simplify node hide settings'] = FALSE;
-    }
-    else {
-      $new_permissions['view hidden fields'] = TRUE;
-    }
-    user_role_change_permissions($rid, $new_permissions);
-  }
-
-  // Migrate variables
-  $fields = array(
-    'author' => 'author',
-    'comment_settings' => 'comment',
-    'filter' => 'format',
-    'menu' => 'menu',
-    'options' => 'options',
-    'path' => 'path',
-    'revision_information' => 'revision',
-  );
-  $node_types = array('Node') + node_type_get_names();
-  foreach ($node_types as $type => $name) {
-    $type_old = $type ? '_' . $type : '';
-    $type_new = $type ? $type : 'global';
-    foreach ($fields as $field_old => $field_new) {
-      if (variable_get('simplify' . $type_old . '_node_hide_' . $field_old, 0)) {
-        $variable = variable_get('simplify_nodes_' . $type_new, array());
-        $variable[] = $field_new;
-        variable_set('simplify_nodes_' . $type_new, $variable);
-      }
-      variable_del('simplify' . $type_old . '_node_hide_' . $field_old);
-    }
-  }
-}
-
-/**
- * Update module weight.
- */
-function simplify_update_7301(&$sandbox) {
-  db_update('system')
-    ->fields(array('weight' => 5))
-    ->condition('name', 'simplify')
-    ->execute();
+  $config_taxonomy->save();
 }
 
