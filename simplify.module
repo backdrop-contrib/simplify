@@ -153,7 +153,6 @@ function simplify_form_node_type_form_alter(&$form, &$form_state, $form_id) {
   $type = $form['#node_type'];
 
   // Nodes
-  $config_nodes = config('simplify.nodes');
   $form['simplify'] = array(
     '#type' => 'fieldset',
     '#title' => t('Simplify'),
@@ -165,13 +164,12 @@ function simplify_form_node_type_form_alter(&$form, &$form_state, $form_id) {
     '#type' => 'checkboxes',
     '#title' => t('Hide'),
     '#options' => simplify_get_fields('nodes'),
-    '#default_value' => $config_nodes->get($type->type),
+    '#default_value' => config_get('simplify.nodes', $type->type),
     '#after_build' => array('simplify_disable_globally_hidden_checkboxes'),
   );
 
   // Comments
   if (!empty($form['comment'])) {
-    $config_comments = config('simplify.comments');
     $form['comment']['simplify'] = array(
       '#type' => 'fieldset',
       '#title' => t('Simplify'),
@@ -184,7 +182,7 @@ function simplify_form_node_type_form_alter(&$form, &$form_state, $form_id) {
       '#type' => 'checkboxes',
       '#title' => t('Hide'),
       '#options' => simplify_get_fields('comments'),
-      '#default_value' => $config_comments->get($type->type),
+      '#default_value' => config_get('simplify.comments', $type->type),
       '#after_build' => array('simplify_disable_globally_hidden_checkboxes'),
     );
   }
@@ -200,15 +198,11 @@ function simplify_form_node_type_form_alter_submit($form, &$form_state) {
   $values = $form_state['values'];
 
   // Nodes
-  $config_nodes = config('simplify.nodes');
-  $config_nodes->set($values['type'], array_values(array_filter($values['simplify_nodes'])));
-  $config_nodes->save();
+  config_set('simplify.nodes', $values['type'], array_values(array_filter($values['simplify_nodes'])));
 
   // Comments
   if (isset($values['simplify_comments'])) {
-    $config_comments = config('simplify.comments');
-    $config_comments->set($values['type'], array_values(array_filter($values['simplify_comments'])));
-    $config_comments->save();
+    config_set('simplify.comments', $values['type'], array_values(array_filter($values['simplify_comments'])));
   }
 }
 
@@ -231,26 +225,21 @@ function simplify_form_taxonomy_form_vocabulary_alter(&$form, &$form_state, $for
     '#type' => 'checkboxes',
     '#title' => t('Hide'),
     '#options' => simplify_get_fields('taxonomy'),
-    '#default_value' => variable_get('simplify_taxonomy_' . $vocabulary->machine_name, array()),
+    '#default_value' => config_get('simplify.taxonomy', $vocabulary->machine_name),
     '#after_build' => array('simplify_disable_globally_hidden_checkboxes'),
   );
 
-  // Add custom submit function
-  $form['#submit'][] = 'simplify_taxonomy_form_vocabulary_submit';
+  // Custom submit function
+  $form['#submit'][] = 'simplify_form_taxonomy_form_vocabulary_alter_submit';
 }
 
 /**
- * Custom submit function for taxonomy_form_vocabulary.
+ * Submit function for simplify_form_taxonomy_form_vocabulary_alter().
  */
-function simplify_taxonomy_form_vocabulary_submit($form, &$form_state) {
-  $vocabulary = $form_state['vocabulary'];
+function simplify_form_taxonomy_form_vocabulary_alter_submit($form, &$form_state) {
+  $values = $form_state['values'];
 
-  // Get fields
-  $fields = $form_state['values']['simplify_taxonomy'];
-  $fields = array_keys(array_filter($fields));
-
-  // Values aren't saved to a variable by default, so do it manually
-  variable_set('simplify_taxonomy_' . $vocabulary->machine_name, $fields);
+  config_set('simplify.taxonomy', $values['machine_name'], array_values(array_filter($values['simplify_taxonomy'])));
 }
 
 /**
@@ -258,7 +247,8 @@ function simplify_taxonomy_form_vocabulary_submit($form, &$form_state) {
  */
 function simplify_disable_globally_hidden_checkboxes($element, &$form_state) {
   // Get globally hidden fields
-  $global_fields = variable_get($element['#name'] . '_global', array());
+  $name_parts = array_reverse(explode('_', $element['#name']));
+  $global_fields = config_get('simplify.global', $name_parts[0]);
 
   // Disable any globally hidden fields
   foreach (element_children($element) as $field) {
@@ -278,8 +268,8 @@ function simplify_form_node_form_alter(&$form, &$form_state, $form_id) {
   $node = $form['#node'];
 
   // Get array of fields to hide
-  $global_fields = variable_get('simplify_nodes_global', array());
-  $type_fields = variable_get('simplify_nodes_' . $node->type, array());
+  $global_fields = config_get('simplify.global', 'nodes');
+  $type_fields = config_get('simplify.nodes', $node->type);
   $fields = array_merge($global_fields, $type_fields);
 
   // Hide fields
@@ -291,7 +281,7 @@ function simplify_form_node_form_alter(&$form, &$form_state, $form_id) {
  */
 function simplify_form_user_profile_form_alter(&$form, &$form_state, $form_id) {
   // Get array of fields to hide
-  $fields = variable_get('simplify_users_global', array());
+  $fields = config_get('simplify.global', 'users');
 
   // Hide fields
   simplify_hide_fields($fields, $form);
@@ -301,11 +291,8 @@ function simplify_form_user_profile_form_alter(&$form, &$form_state, $form_id) {
  * Implements hook_form_FORM_ID_alter() for user_register_form.
  */
 function simplify_form_user_register_form_alter(&$form, &$form_state, $form_id) {
-  // Get array of fields to hide
-  $fields = variable_get('simplify_users_global', array());
-
-  // Hide fields
-  simplify_hide_fields($fields, $form);
+  // Same as simplify_form_user_profile_form_alter()
+  simplify_form_user_profile_form_alter($form, $form_state, $form_id);
 }
 
 /**
@@ -315,8 +302,8 @@ function simplify_form_comment_form_alter(&$form, &$form_state, $form_id) {
   $node = $form['#node'];
 
   // Get array of fields to hide
-  $global_fields = variable_get('simplify_comments_global', array());
-  $type_fields = variable_get('simplify_comments_' . $node->type, array());
+  $global_fields = config_get('simplify.global', 'comments');
+  $type_fields = config_get('simplify.comments', $node->type);
   $fields = array_merge($global_fields, $type_fields);
 
   // Hide fields
@@ -330,8 +317,8 @@ function simplify_form_taxonomy_form_term_alter(&$form, &$form_state, $form_id) 
   $vocabulary = $form['#vocabulary'];
 
   // Get array of fields to hide
-  $global_fields = variable_get('simplify_taxonomy_global', array());
-  $vocabulary_fields = variable_get('simplify_taxonomy_' . $vocabulary->machine_name, array());
+  $global_fields = config_get('simplify.global', 'taxonomy');
+  $vocabulary_fields = config_get('simplify.taxonomy', $vocabulary->machine_name);
   $fields = array_merge($global_fields, $vocabulary_fields);
 
   // Hide fields
@@ -343,7 +330,7 @@ function simplify_form_taxonomy_form_term_alter(&$form, &$form_state, $form_id) 
  */
 function simplify_form_block_add_block_form_alter(&$form, &$form_state, $form_id) {
   // Get array of fields to hide
-  $fields = variable_get('simplify_blocks_global', array());
+  $fields = config_get('simplify.global', 'blocks');
 
   // Hide fields
   simplify_hide_fields($fields, $form);
@@ -353,11 +340,8 @@ function simplify_form_block_add_block_form_alter(&$form, &$form_state, $form_id
  * Implements hook_form_FORM_ID_alter() for block_admin_configure.
  */
 function simplify_form_block_admin_configure_alter(&$form, &$form_state, $form_id) {
-  // Get array of fields to hide
-  $fields = variable_get('simplify_blocks_global', array());
-
-  // Hide fields
-  simplify_hide_fields($fields, $form);
+  // Same as simplify_form_block_add_block_form_alter()
+  simplify_form_block_add_block_form_alter($form, $form_state, $form_id);
 }
 
 /**
