@@ -14,9 +14,9 @@ types include:
 - Taxonomy
 - Blocks
 
-Fields can be hidden globally or per field type.
+Fields can be hidden globally or per field type.  
 Globally hidden fields are hidden from all forms of that field type (e.g. a
-field can be hidden from all node forms (Pages, Articles, etc.)).
+field can be hidden from all node forms (Pages, Articles, etc.)).  
 Fields can also be hidden more specifically based on their field type:
 
 - Node fields per content type
@@ -44,9 +44,9 @@ Installation
 - Visit the content type edit pages under Administration > Structure > Content
   Types > [Content Type Name] > Edit (admin/structure/types/manage/[type]/edit)
   and choose which fields you want to be hidden per content type, and/or visit
-  the taxonomy vocabulary edit pages under Administration > Structure > Taxonomy
-  > Edit Vocabulary (admin/structure/taxonomy/[vocabulary]/edit) and choose
-  which fields you want to be hidden per vocabulary.
+  the taxonomy vocabulary edit pages under Administration > Structure >
+  Taxonomy > Edit Vocabulary (admin/structure/taxonomy/[vocabulary]/edit) and
+  choose which fields you want to be hidden per vocabulary.
 
 License
 -------
