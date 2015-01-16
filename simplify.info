@@ -3,4 +3,5 @@ description = "Simplifies the user interface by hiding particular fields."
 backdrop = 1.x
 package = User interface
 configure = admin/config/user-interface/simplify
+version = 1.x-1.0
 
