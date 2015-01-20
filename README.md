@@ -54,8 +54,12 @@ License
 This project is GPL v2 software. See the LICENSE.txt file in this directory for
 complete text.
 
-Maintainers
------------
+Current Maintainers
+-------------------
 
 - Peter Anderson (https://github.com/BWPanda)
 
+Credits
+-------
+
+Simplify was originally written by Mark Shust (https://github.com/markoshust).
