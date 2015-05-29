@@ -13,6 +13,25 @@ function simplify_install() {
     ->fields(array('weight' => 5))
     ->condition('name', 'simplify')
     ->execute();
+
+  // Set default value (empty array) in config files
+  // Nodes & comments
+  $node_types = node_type_get_names();
+  $config_nodes = config('simplify.nodes');
+  $config_comments = config('simplify.comments');
+  foreach ($node_types as $type => $name) {
+    $config_nodes->set($type, array());
+    $config_comments->set($type, array());
+  }
+  $config_nodes->save();
+  $config_comments->save();
+  // Taxonomy
+  $vocabularies = taxonomy_vocabulary_get_names();
+  $config_taxonomy = config('simplify.taxonomy');
+  foreach ($vocabularies as $name => $vocabulary) {
+    $config_taxonomy->set($name, array());
+  }
+  $config_taxonomy->save();
 }
 
 /**

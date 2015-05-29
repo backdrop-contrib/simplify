@@ -66,6 +66,14 @@ function simplify_menu() {
 function simplify_global_configuration_form($form, &$form_state) {
   $config = config('simplify.global');
 
+  // User 1 permission
+  $form['simplify_user1'] = array(
+    '#type' => 'checkbox',
+    '#title' => t('Hide fields from User 1'),
+    '#description' => t("By default, Backdrop gives User 1 <em>all</em> permissions (including Simplify's <em>View hidden fields</em> permission). This means that User 1 will always be able to view all hidden fields (and is by design).<br>Check this box to override this functionality and hide fields from User 1. NOTE: As this option overrides default Backdrop behaviour, it should be used sparingly and only when you fully understand the consequences."),
+    '#default_value' => $config->get('user1'),
+  );
+
   // Nodes
   $form['nodes'] = array(
     '#type' => 'fieldset',
@@ -154,6 +162,7 @@ function simplify_global_configuration_form_submit($form, &$form_state) {
   $values = $form_state['values'];
 
   $config = config('simplify.global');
+  $config->set('user1', $values['simplify_user1']);
   $config->set('nodes', array_values(array_filter($values['simplify_nodes_global'])));
   $config->set('users', array_values(array_filter($values['simplify_users_global'])));
   if (isset($values['simplify_comments_global'])) {
@@ -372,7 +381,9 @@ function simplify_form_block_admin_configure_alter(&$form, &$form_state, $form_i
  * Hide fields from all users without the 'View hidden fields' permission.
  */
 function simplify_hide_fields($fields, &$form) {
-  if (!empty($fields) && !user_access('view hidden fields')) {
+  global $user;
+
+  if (!empty($fields) && (!user_access('view hidden fields') || ($user->uid == 1 && config_get('simplify.global', 'user1')))) {
     foreach ($fields as $field) {
       simplify_hide_field($field, $form);
     }
@@ -421,6 +432,7 @@ function simplify_get_fields($type) {
     case 'users':
       // Backdrop core
       $fields['format'] = t('Text format selection');
+      $fields['status'] = t('Status (blocked/active)');
       if (module_exists('contact')) {
         $fields['contact'] = t('Contact settings');
       }
@@ -500,10 +512,7 @@ function simplify_hide_field($field, &$form) {
 
     // Text format selection
     case 'format':
-      $js = 'jQuery(document).ready(function($) {
-        $("#' . $form['#id'] . ' fieldset.filter-wrapper").hide();
-      });';
-      backdrop_add_js($js, 'inline');
+      simplify_hide_text_format_elements($form);
     break;
 
     // Menu settings
@@ -541,6 +550,11 @@ function simplify_hide_field($field, &$form) {
       $form['revision_information']['#access'] = FALSE;
     break;
 
+    // Status
+    case 'status':
+      $form['account']['status']['#access'] = FALSE;
+    break;
+
     // XML sitemap
     case 'xmlsitemap':
       $form['xmlsitemap']['#access'] = FALSE;
@@ -550,5 +564,35 @@ function simplify_hide_field($field, &$form) {
 
   // Allow other modules to alter the way fields are hidden
   backdrop_alter('simplify_hide_field', $form, $field);
+}
+
+/**
+ * Recurse through the provided form and hide any text_format elements.
+ */
+function simplify_hide_text_format_elements(&$form) {
+  foreach (element_children($form) as $key) {
+    if (!isset($form[$key]['#type'])) {
+      simplify_hide_text_format_elements($form[$key]);
+    }
+    else {
+      if ($form[$key]['#type'] == 'container' && isset($form[$key]['#language']) && !empty($form[$key][$form[$key]['#language']])) {
+        simplify_hide_text_format_elements($form[$key][$form[$key]['#language']]);
+      }
+      elseif ($form[$key]['#type'] == 'text_format') {
+        $form[$key]['#after_build'][] = 'simplify_hide_text_format_element';
+      }
+    }
+  }
+}
+
+/**
+ * Hide a given text_format element.
+ */
+function simplify_hide_text_format_element($element) {
+  if (!empty($element['format'])) {
+    $element['format']['#access'] = FALSE;
+  }
+
+  return $element;
 }
 

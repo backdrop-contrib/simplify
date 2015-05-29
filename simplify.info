@@ -4,5 +4,5 @@ backdrop = 1.x
 type = module
 package = User interface
 configure = admin/config/user-interface/simplify
-version = 1.x-1.0.2
+version = 1.x-1.1.0
 
