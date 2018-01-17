@@ -26,19 +26,14 @@ function simplify_install() {
   $config_nodes->save();
   $config_comments->save();
   // Taxonomy
-  $vocabularies = taxonomy_vocabulary_get_names();
-  $config_taxonomy = config('simplify.taxonomy');
-  foreach ($vocabularies as $name => $vocabulary) {
-    $config_taxonomy->set($name, array());
+  if (module_exists('taxonomy')) {
+    $vocabularies = taxonomy_vocabulary_get_names();
+    $config_taxonomy = config('simplify.taxonomy');
+    foreach ($vocabularies as $name => $vocabulary) {
+      $config_taxonomy->set($name, array());
+    }
+    $config_taxonomy->save();
   }
-  $config_taxonomy->save();
-}
-
-/**
- * Implements hook_update_last_removed().
- */
-function simplify_update_last_removed() {
-  return 7301;
 }
 
 /**
@@ -73,12 +68,21 @@ function simplify_update_1000(&$sandbox) {
   $config_comments->save();
 
   // Taxonomy
-  $vocabularies = taxonomy_vocabulary_get_names();
-  $config_taxonomy = config('simplify.taxonomy');
-  foreach ($vocabularies as $name => $vocabulary) {
-    $config_taxonomy->set($name, update_variable_get('simplify_taxonomy_' . $name, array()));
-    update_variable_del('simplify_taxonomy_' . $name);
+  if (module_exists('taxonomy')) {
+    $vocabularies = taxonomy_vocabulary_get_names();
+    $config_taxonomy = config('simplify.taxonomy');
+    foreach ($vocabularies as $name => $vocabulary) {
+      $config_taxonomy->set($name, update_variable_get('simplify_taxonomy_' . $name, array()));
+      update_variable_del('simplify_taxonomy_' . $name);
+    }
+    $config_taxonomy->save();
   }
-  $config_taxonomy->save();
+}
+
+/**
+ * Implements hook_update_last_removed().
+ */
+function simplify_update_last_removed() {
+  return 7301;
 }
 
