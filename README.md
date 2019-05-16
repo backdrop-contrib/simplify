@@ -29,8 +29,8 @@ on the Page content type).
 Installation
 ------------
 
-- Install Simplify using the official Backdrop CMS instructions at
-  https://backdropcms.org/guide/modules
+- Install this module using the official Backdrop CMS instructions at
+  https://backdropcms.org/guide/modules.
 
 - Visit the permissions page under Administration > Configuration > People >
   Permissions (admin/config/people/permissions) and choose which role(s) should
@@ -48,18 +48,26 @@ Installation
   Taxonomy > Edit Vocabulary (admin/structure/taxonomy/[vocabulary]/edit) and
   choose which fields you want to be hidden per vocabulary.
 
+Issues
+------
+
+Bugs and Feature requests should be reported in the Issue Queue:
+https://github.com/backdrop-contrib/simplify/issues.
+
+Current Maintainers
+-------------------
+
+- Peter Anderson (https://github.com/BWPanda).
+
+Credits
+-------
+
+- Ported to Backdrop CMS by Peter Anderson (https://github.com/BWPanda).
+- Originally written for Drupal by Mark Shust
+  (https://www.drupal.org/u/markoshust).
+
 License
 -------
 
 This project is GPL v2 software. See the LICENSE.txt file in this directory for
 complete text.
-
-Current Maintainers
--------------------
-
-- Peter Anderson (https://github.com/BWPanda)
-
-Credits
--------
-
-Simplify was originally written by Mark Shust (https://github.com/markoshust).

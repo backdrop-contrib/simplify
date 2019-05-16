@@ -17,7 +17,7 @@
  *   See simplify_get_fields() for examples.
  */
 function hook_simplify_get_fields_alter(&$fields, $type) {
-  // Allow our module's custom 'foo' node field to be hidden
+  // Allow our module's custom 'foo' node field to be hidden.
   if ($type == 'nodes') {
     $fields['foo'] = t('Foo field');
   }
@@ -35,7 +35,7 @@ function hook_simplify_get_fields_alter(&$fields, $type) {
  *   simplify_get_fields() or hook_simplify_get_fields_alter().
  */
 function hook_simplify_hide_field_alter(&$form, $field) {
-  // Hide our module's custom 'foo' node field
+  // Hide our module's custom 'foo' node field.
   if ($field == 'foo') {
     $form['foo']['#access'] = FALSE;
   }

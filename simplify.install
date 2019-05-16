@@ -6,31 +6,91 @@
 
 /**
  * Implements hook_install().
+ *
+ * Set default values in config files.
  */
 function simplify_install() {
-  // Update module weight
+  // Update module weight to allow it to run after other modules.
   db_update('system')
     ->fields(array('weight' => 5))
     ->condition('name', 'simplify')
     ->execute();
 
-  // Set default value (empty array) in config files
-  // Nodes & comments
-  $node_types = node_type_get_names();
+  // Global.
+  $config_global = config('simplify.global');
+  $types = array(
+    'nodes',
+    'users',
+    'comments',
+    'taxonomy',
+    'blocks',
+  );
+  foreach ($types as $type) {
+    $config_global->set($type, simplify_get_defaults($type));
+  }
+  $config_global->save();
+
+  // Nodes & comments.
   $config_nodes = config('simplify.nodes');
   $config_comments = config('simplify.comments');
+  $node_types = node_type_get_names();
   foreach ($node_types as $type => $name) {
-    $config_nodes->set($type, array());
-    $config_comments->set($type, array());
+    $config_nodes->set($type, simplify_get_defaults('nodes'));
+    $config_comments->set($type, simplify_get_defaults('comments'));
   }
   $config_nodes->save();
   $config_comments->save();
-  // Taxonomy
+
+  // Taxonomy.
   if (module_exists('taxonomy')) {
-    $vocabularies = taxonomy_vocabulary_get_names();
     $config_taxonomy = config('simplify.taxonomy');
+    $vocabularies = taxonomy_vocabulary_load_multiple(FALSE);
     foreach ($vocabularies as $name => $vocabulary) {
-      $config_taxonomy->set($name, array());
+      $config_taxonomy->set($name, simplify_get_defaults('taxonomy'));
+    }
+    $config_taxonomy->save();
+  }
+}
+
+/**
+ * Update config files to the new format.
+ */
+function simplify_update_1100(&$sandbox) {
+  // Global.
+  $config_global = config('simplify.global');
+  $types = array(
+    'nodes',
+    'users',
+    'comments',
+    'taxonomy',
+    'blocks',
+  );
+  foreach ($types as $type) {
+    $existing_global = $config_global->get($type);
+    $config_global->set($type, simplify_get_defaults($type, $existing_global));
+  }
+  $config_global->save();
+
+  // Nodes & comments.
+  $config_nodes = config('simplify.nodes');
+  $config_comments = config('simplify.comments');
+  $node_types = node_type_get_names();
+  foreach ($node_types as $type => $name) {
+    $existing_nodes = $config_nodes->get($type);
+    $config_nodes->set($type, simplify_get_defaults('nodes', $existing_nodes));
+    $existing_comments = $config_comments->get($type);
+    $config_comments->set($type, simplify_get_defaults('comments', $existing_comments));
+  }
+  $config_nodes->save();
+  $config_comments->save();
+
+  // Taxonomy.
+  if (module_exists('taxonomy')) {
+    $config_taxonomy = config('simplify.taxonomy');
+    $vocabularies = taxonomy_vocabulary_load_multiple(FALSE);
+    foreach ($vocabularies as $name => $vocabulary) {
+      $existing_taxonomy = $config_taxonomy->get($name);
+      $config_taxonomy->set($name, simplify_get_defaults('taxonomy', $existing_taxonomy));
     }
     $config_taxonomy->save();
   }
@@ -40,7 +100,7 @@ function simplify_install() {
  * Convert variables to config.
  */
 function simplify_update_1000(&$sandbox) {
-  // Global
+  // Global.
   $config_global = config('simplify.global');
   $config_global->set('nodes', update_variable_get('simplify_nodes_global', array()));
   $config_global->set('users', update_variable_get('simplify_users_global', array()));
@@ -54,7 +114,7 @@ function simplify_update_1000(&$sandbox) {
   update_variable_del('simplify_taxonomy_global');
   update_variable_del('simplify_blocks_global');
 
-  // Nodes & comments
+  // Nodes & comments.
   $node_types = node_type_get_names();
   $config_nodes = config('simplify.nodes');
   $config_comments = config('simplify.comments');
@@ -67,9 +127,9 @@ function simplify_update_1000(&$sandbox) {
   $config_nodes->save();
   $config_comments->save();
 
-  // Taxonomy
+  // Taxonomy.
   if (module_exists('taxonomy')) {
-    $vocabularies = taxonomy_vocabulary_get_names();
+    $vocabularies = taxonomy_vocabulary_load_multiple(FALSE);
     $config_taxonomy = config('simplify.taxonomy');
     foreach ($vocabularies as $name => $vocabulary) {
       $config_taxonomy->set($name, update_variable_get('simplify_taxonomy_' . $name, array()));
