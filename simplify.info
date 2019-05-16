@@ -3,5 +3,6 @@ description = Simplifies the user interface by hiding particular fields.
 backdrop = 1.x
 type = module
 package = User interface
+tags[] = Fields
 configure = admin/config/user-interface/simplify
 
