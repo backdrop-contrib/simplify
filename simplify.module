@@ -293,6 +293,11 @@ function simplify_hide_field($field, &$form) {
       $form['contact']['#access'] = FALSE;
     break;
 
+    // Description field.
+    case 'description':
+      $form['description']['#access'] = FALSE;
+    break;
+
     // Formatting options.
     case 'format':
       simplify_hide_text_format_elements($form);
@@ -487,6 +492,7 @@ function simplify_get_fields($type) {
     // Taxonomy.
     case 'taxonomy':
       // Core fields.
+      $fields['description'] = t('Description');
       $fields['format'] = t('Formatting options');
       $fields['relations'] = t('Relations');
       if (module_exists('path')) {
