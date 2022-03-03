@@ -5,4 +5,3 @@ type = module
 package = User interface
 tags[] = Fields
 configure = admin/config/user-interface/simplify
-

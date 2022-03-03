@@ -145,4 +145,3 @@ function simplify_update_1000(&$sandbox) {
 function simplify_update_last_removed() {
   return 7301;
 }
-

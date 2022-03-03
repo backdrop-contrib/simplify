@@ -40,4 +40,3 @@ function hook_simplify_hide_field_alter(&$form, $field) {
     $form['foo']['#access'] = FALSE;
   }
 }
-

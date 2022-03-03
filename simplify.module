@@ -522,4 +522,3 @@ function simplify_get_fields($type) {
 
   return $fields;
 }
-

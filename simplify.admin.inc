@@ -98,4 +98,3 @@ function simplify_global_configuration_form($form, &$form_state) {
 
   return system_settings_form($form);
 }
-
