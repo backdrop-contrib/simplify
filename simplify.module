@@ -318,6 +318,11 @@ function simplify_hide_field($field, &$form) {
       $form['options']['#access'] = FALSE;
     break;
 
+    // Seo meta tags.
+    case 'seo_meta':
+      $form['seo_meta']['#access'] = FALSE;
+    break;
+
     // URL settings.
     case 'path':
       $form['path']['#access'] = FALSE;
@@ -458,6 +463,9 @@ function simplify_get_fields($type) {
       // Contrib fields.
       if (module_exists('metatag')) {
         $fields['metatag'] = t('Meta tags');
+      }
+      if (module_exists('seo_meta')) {
+        $fields['seo_meta'] = t('SEO meta tags');
       }
       if (module_exists('xmlsitemap_node')) {
         $fields['xmlsitemap'] = t('XML sitemap');
