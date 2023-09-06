@@ -63,6 +63,9 @@ function simplify_menu() {
  */
 function simplify_form_node_type_form_alter(&$form, &$form_state, $form_id) {
   $type = $form['#node_type'];
+  // Check to see if type is new so don't try to load config for node type
+  // settings or node type comment settings.
+  $type_is_new = property_exists($type, 'is_new');
 
   // Nodes.
   $form['simplify'] = array(
@@ -76,7 +79,7 @@ function simplify_form_node_type_form_alter(&$form, &$form_state, $form_id) {
     '#type' => 'checkboxes',
     '#title' => t('Hide:'),
     '#options' => simplify_get_fields('nodes'),
-    '#default_value' => config_get('simplify.nodes', $type->type),
+    '#default_value' => !$type_is_new ? array_filter(config_get('simplify.nodes', $type->type)) : array(),
     '#after_build' => array('simplify_disable_globally_hidden_checkboxes'),
   );
 
@@ -94,7 +97,7 @@ function simplify_form_node_type_form_alter(&$form, &$form_state, $form_id) {
       '#type' => 'checkboxes',
       '#title' => t('Hide:'),
       '#options' => simplify_get_fields('comments'),
-      '#default_value' => config_get('simplify.comments', $type->type),
+      '#default_value' => !$type_is_new ? array_filter(config_get('simplify.comments', $type->type)) : array(),
       '#after_build' => array('simplify_disable_globally_hidden_checkboxes'),
     );
   }
