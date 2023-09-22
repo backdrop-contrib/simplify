@@ -136,7 +136,7 @@ function simplify_form_taxonomy_form_vocabulary_alter(&$form, &$form_state, $for
     '#type' => 'checkboxes',
     '#title' => t('Hide:'),
     '#options' => simplify_get_fields('taxonomy'),
-    '#default_value' => config_get('simplify.taxonomy', $vocabulary->machine_name),
+    '#default_value' => !empty($vocabulary->machine_name) ? array_filter(config_get('simplify.taxonomy', $vocabulary->machine_name)) : array(),
     '#after_build' => array('simplify_disable_globally_hidden_checkboxes'),
   );
 
