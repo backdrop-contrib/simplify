@@ -201,7 +201,6 @@ function simplify_taxonomy_vocabulary_insert(TaxonomyVocabulary $vocabulary) {
   }
 }
 
-
 /**
  * Disable checkboxes to indicate fields have been hidden globally.
  */
@@ -474,7 +473,6 @@ function simplify_get_defaults($type, $existing = NULL) {
 
   return $defaults;
 }
-
 
 /**
  * Get an array of fields (by type) that can be hidden.
