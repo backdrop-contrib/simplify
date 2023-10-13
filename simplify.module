@@ -71,7 +71,10 @@ function simplify_form_node_type_form_alter(&$form, &$form_state, $form_id) {
   $form['simplify'] = array(
     '#type' => 'fieldset',
     '#title' => t('Simplify'),
-    '#description' => t('These fields will be hidden from <em>@type</em> node forms. Disabled checkboxes indicate fields that have been hidden <a href="@global">globally</a>.', array('@type' => $type->name, '@global' => url('admin/config/user-interface/simplify'))),
+    '#description' => t('These fields will be hidden from <em>@type</em> node forms. Disabled checkboxes indicate fields that have been hidden <a href="@global">globally</a>.', array(
+      '@type' => $type->name,
+      '@global' => url('admin/config/user-interface/simplify'),
+    )),
     '#access' => user_access('administer simplify'),
     '#group' => 'additional_settings',
   );
@@ -88,7 +91,10 @@ function simplify_form_node_type_form_alter(&$form, &$form_state, $form_id) {
     $form['comment']['simplify'] = array(
       '#type' => 'fieldset',
       '#title' => t('Simplify'),
-      '#description' => t('These fields will be hidden from <em>@type</em> comment forms. Disabled checkboxes indicate fields that have been hidden <a href="@global">globally</a>.', array('@type' => $type->name, '@global' => url('admin/config/user-interface/simplify'))),
+      '#description' => t('These fields will be hidden from <em>@type</em> comment forms. Disabled checkboxes indicate fields that have been hidden <a href="@global">globally</a>.', array(
+        '@type' => $type->name,
+        '@global' => url('admin/config/user-interface/simplify'),
+      )),
       '#access' => user_access('administer simplify'),
       '#collapsible' => TRUE,
       '#collapsed' => TRUE,
@@ -131,7 +137,10 @@ function simplify_form_taxonomy_form_vocabulary_alter(&$form, &$form_state, $for
   $form['simplify'] = array(
     '#type' => 'fieldset',
     '#title' => t('Simplify'),
-    '#description' => t('These fields will be hidden from <em>@vocabulary</em> taxonomy term forms. Disabled checkboxes indicate fields that have been hidden <a href="@global">globally</a>.', array('@vocabulary' => $vocabulary->name, '@global' => url('admin/config/user-interface/simplify'))),
+    '#description' => t('These fields will be hidden from <em>@vocabulary</em> taxonomy term forms. Disabled checkboxes indicate fields that have been hidden <a href="@global">globally</a>.', array(
+      '@vocabulary' => $vocabulary->name,
+      '@global' => url('admin/config/user-interface/simplify'),
+    )),
     '#access' => user_access('administer simplify'),
     '#group' => 'additional_settings',
   );
