@@ -128,6 +128,26 @@ function simplify_form_node_type_form_alter_submit($form, &$form_state) {
 }
 
 /**
+ * Implements hook_node_type_insert().
+ *
+ * If node types are created programmatically by a module's install procedure,
+ * we need to set default config for that content type.
+ */
+function simplify_node_type_insert($content_type) {
+  // Check whether config has already been set for this content type i.e. if
+  // the content type was inserted manually using the form.
+  if (is_null(config_get('simplify.nodes', $content_type->type))) {
+    // If not set, then get the global defaults and set for the new content
+    // type.
+    $default_config = config('simplify.global');
+    $node_settings = $default_config->get('nodes');
+    config_set('simplify.nodes', $content_type->type, $node_settings);
+    $comment_settings = $default_config->get('comments');
+    config_set('simplify.comments', $content_type->type, $comment_settings);
+  }
+}
+
+/**
  * Implements hook_form_FORM_ID_alter() for taxonomy_form_vocabulary.
  */
 function simplify_form_taxonomy_form_vocabulary_alter(&$form, &$form_state, $form_id) {
@@ -163,6 +183,22 @@ function simplify_form_taxonomy_form_vocabulary_alter_submit($form, &$form_state
   $values = $form_state['values'];
 
   config_set('simplify.taxonomy', $values['machine_name'], $values['taxonomy']);
+}
+
+/**
+ * Implements hook_taxonomy_vocabulary_insert().
+ *
+ * If taxonomy vocabularies are created programmatically by a module's install
+ * procedure, we need to set default config for that vocabulary.
+ */
+function simplify_taxonomy_vocabulary_insert(TaxonomyVocabulary $vocabulary) {
+  // Check whether config has already been set for this vocabulary. i.e. if the
+  // vocabulary was inserted manually using the form.
+  if (is_null(config_get('simplify.taxonomy', $vocabulary->machine_name ))) {
+    // If not set, then get the global defaults and set for the new vocabulary.
+    $default_config = config_get('simplify.global', 'taxonomy');
+    config_set('simplify.taxonomy', $vocabulary->machine_name, $default_config);
+  }
 }
 
 /**
