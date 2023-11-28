@@ -134,16 +134,38 @@ function simplify_form_node_type_form_alter_submit($form, &$form_state) {
  * we need to set default config for that content type.
  */
 function simplify_node_type_insert($content_type) {
-  // Check whether config has already been set for this content type i.e. if
-  // the content type was inserted manually using the form.
-  if (is_null(config_get('simplify.nodes', $content_type->type))) {
+  simplify_set_default_config($content_type->type);
+}
+
+/**
+ * Implements hook_node_type_update().
+ *
+ * If node types are created programmatically in a different way such as by
+ * the Content Type Clone module, we need to set the default config for that
+ * content type.
+ */
+function simplify_node_type_update($content_type) {
+  simplify_set_default_config($content_type->type);
+}
+
+/**
+ * Helper function to set default config on new content types that are created
+ * outside the normal "Add content type" form.
+ *
+ * @param string $content_type_machine_name
+ *   The machine name of the content type.
+ */
+function simplify_set_default_config($content_type_machine_name) {
+  // As this is called from hook_node_type_insert() and hook_node_type_update()
+  // we need to only do this if the config does not exist.
+  if (is_null(config_get('simplify.nodes', $content_type_machine_name))) {
     // If not set, then get the global defaults and set for the new content
     // type.
     $default_config = config('simplify.global');
     $node_settings = $default_config->get('nodes');
-    config_set('simplify.nodes', $content_type->type, $node_settings);
+    config_set('simplify.nodes', $content_type_machine_name, $node_settings);
     $comment_settings = $default_config->get('comments');
-    config_set('simplify.comments', $content_type->type, $comment_settings);
+    config_set('simplify.comments', $content_type_machine_name, $comment_settings);
   }
 }
 
