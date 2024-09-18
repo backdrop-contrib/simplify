@@ -63,9 +63,11 @@ function simplify_menu() {
  */
 function simplify_form_node_type_form_alter(&$form, &$form_state, $form_id) {
   $type = $form['#node_type'];
-  // Check to see if type is new so don't try to load config for node type
-  // settings or node type comment settings.
-  $type_is_new = property_exists($type, 'is_new');
+  // Check to see if type is new or if config doesn't yet exist for another
+  // reason. First check for 'is_new' property as we've already got the content
+  // type. If not 'is_new' check to see if Simplify config exists for content
+  // type.
+  $type_is_new = property_exists($type, 'is_new') || is_null(config_get('simplify.nodes', $type->type));
 
   // Nodes.
   $form['simplify'] = array(
